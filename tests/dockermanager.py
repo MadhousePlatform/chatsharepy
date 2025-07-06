@@ -4,8 +4,6 @@
 Tests for the Docker manager module.
 """
 
-import sys
-import os
 import unittest
 from unittest.mock import Mock, patch
 from src.docker_manager import get_containers

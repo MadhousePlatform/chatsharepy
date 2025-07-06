@@ -5,7 +5,6 @@ Tests for the Chatshare application.
 """
 
 import sys
-import os
 import unittest
 from unittest.mock import Mock, patch
 from io import StringIO
