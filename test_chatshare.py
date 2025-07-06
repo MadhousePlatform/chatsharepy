@@ -5,7 +5,7 @@ Tests for the Chatshare application.
 """
 
 import unittest
-from unittest.mock import Mock, patch, MagicMock
+from unittest.mock import Mock, patch
 from io import StringIO
 import sys
 from chatshare import main
@@ -20,7 +20,7 @@ class TestChatshare(unittest.TestCase):
         """Test that main() prints 'Welcome to Chatshare!'"""
         # Configure mock to return empty list
         mock_get_containers.return_value = []
-        
+
         # Capture stdout
         captured_output = StringIO()
         sys.stdout = captured_output
@@ -43,12 +43,12 @@ class TestChatshare(unittest.TestCase):
         # Create mock containers
         mock_container1 = Mock()
         mock_container1.name = "app-container"
-        
+
         mock_container2 = Mock()
         mock_container2.name = "db-container"
-        
+
         mock_get_containers.return_value = [mock_container1, mock_container2]
-        
+
         # Capture stdout
         captured_output = StringIO()
         sys.stdout = captured_output
@@ -66,11 +66,11 @@ class TestChatshare(unittest.TestCase):
                 "db-container"
             ]
             actual_lines = output.split('\n')
-            
+
             self.assertEqual(len(actual_lines), 3)
             for i, expected in enumerate(expected_lines):
                 self.assertEqual(actual_lines[i], expected)
-                
+
         finally:
             # Restore stdout
             sys.stdout = sys.__stdout__
@@ -80,7 +80,7 @@ class TestChatshare(unittest.TestCase):
         """Test main function with no containers."""
         # Configure mock to return empty list
         mock_get_containers.return_value = []
-        
+
         # Capture stdout
         captured_output = StringIO()
         sys.stdout = captured_output
@@ -93,7 +93,7 @@ class TestChatshare(unittest.TestCase):
 
             # Assert the expected output (only welcome message)
             self.assertEqual(output, "Welcome to Chatshare!")
-                
+
         finally:
             # Restore stdout
             sys.stdout = sys.__stdout__
@@ -103,7 +103,7 @@ class TestChatshare(unittest.TestCase):
         """Test main function when Docker manager raises an error."""
         # Configure mock to raise an exception
         mock_get_containers.side_effect = Exception("Docker connection failed")
-        
+
         # Capture stdout
         captured_output = StringIO()
         sys.stdout = captured_output
@@ -111,9 +111,9 @@ class TestChatshare(unittest.TestCase):
             # Call the main function and expect it to raise the exception
             with self.assertRaises(Exception) as context:
                 main()
-            
+
             self.assertEqual(str(context.exception), "Docker connection failed")
-                
+
         finally:
             # Restore stdout
             sys.stdout = sys.__stdout__
@@ -130,13 +130,13 @@ class TestIntegration(unittest.TestCase):
         mock_container1 = Mock()
         mock_container1.name = "web-app"
         mock_container1.status = "running"
-        
+
         mock_container2 = Mock()
         mock_container2.name = "database"
         mock_container2.status = "running"
-        
+
         mock_client.containers.list.return_value = [mock_container1, mock_container2]
-        
+
         # Capture stdout
         captured_output = StringIO()
         sys.stdout = captured_output
@@ -154,14 +154,14 @@ class TestIntegration(unittest.TestCase):
                 "database"
             ]
             actual_lines = output.split('\n')
-            
+
             self.assertEqual(len(actual_lines), 3)
             for i, expected in enumerate(expected_lines):
                 self.assertEqual(actual_lines[i], expected)
-                
+
             # Verify Docker client was called
             mock_client.containers.list.assert_called_once()
-                
+
         finally:
             # Restore stdout
             sys.stdout = sys.__stdout__
