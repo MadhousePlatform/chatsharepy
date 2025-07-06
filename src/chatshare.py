@@ -4,7 +4,7 @@
 Chatshare - A chat sharing application.
 """
 
-from docker_manager import get_containers
+from src.docker_manager import get_containers
 
 def main():
     """

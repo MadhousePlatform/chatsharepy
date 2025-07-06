@@ -4,18 +4,19 @@
 Tests for the Chatshare application.
 """
 
+import sys
+import os
 import unittest
 from unittest.mock import Mock, patch
 from io import StringIO
-import sys
-from chatshare import main
+from src.chatshare import main
 
 class TestChatshare(unittest.TestCase):
     """
     Tests for the Chatshare application.
     """
 
-    @patch('chatshare.get_containers')
+    @patch('src.chatshare.get_containers')
     def test_main_output(self, mock_get_containers):
         """Test that main() prints 'Welcome to Chatshare!'"""
         # Configure mock to return empty list
@@ -37,7 +38,7 @@ class TestChatshare(unittest.TestCase):
             # Restore stdout
             sys.stdout = sys.__stdout__
 
-    @patch('chatshare.get_containers')
+    @patch('src.chatshare.get_containers')
     def test_main_with_containers(self, mock_get_containers):
         """Test main function with containers."""
         # Create mock containers
@@ -75,7 +76,7 @@ class TestChatshare(unittest.TestCase):
             # Restore stdout
             sys.stdout = sys.__stdout__
 
-    @patch('chatshare.get_containers')
+    @patch('src.chatshare.get_containers')
     def test_main_with_no_containers(self, mock_get_containers):
         """Test main function with no containers."""
         # Configure mock to return empty list
@@ -98,7 +99,7 @@ class TestChatshare(unittest.TestCase):
             # Restore stdout
             sys.stdout = sys.__stdout__
 
-    @patch('chatshare.get_containers')
+    @patch('src.chatshare.get_containers')
     def test_main_with_docker_error(self, mock_get_containers):
         """Test main function when Docker manager raises an error."""
         # Configure mock to raise an exception
@@ -123,7 +124,7 @@ class TestIntegration(unittest.TestCase):
     Integration tests for the complete application flow.
     """
 
-    @patch('docker_manager.client')
+    @patch('src.docker_manager.client')
     def test_full_application_flow(self, mock_client):
         """Test the complete flow from main() to Docker manager."""
         # Create mock containers
