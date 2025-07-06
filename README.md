@@ -1,6 +1,6 @@
-# Hello World Python Script
+# Chatshare
 
-A simple Python script that prints "Hello, World!" to the console.
+A chat sharing application built with Python.
 
 ## Installation
 
@@ -20,21 +20,21 @@ A simple Python script that prints "Hello, World!" to the console.
 Simply run the Python script:
 
 ```bash
-python hello.py
+python3 chatshare.py
 ```
 
 Or if you want to make it executable:
 
 ```bash
-chmod +x hello.py
-./hello.py
+chmod +x chatshare.py
+./chatshare.py
 ```
 
 ## Output
 
-The script will output:
+The application will output:
 ```
-Hello, World!
+Welcome to Chatshare!
 ```
 
 ## Testing
@@ -42,19 +42,18 @@ Hello, World!
 Run the unit tests:
 
 ```bash
-python -m unittest test_hello.py -v
+python3 -m unittest test_chatshare.py -v
 ```
 
-This will run two tests:
-- `test_main_output`: Verifies that the main function prints "Hello, World!"
-- `test_main_returns_none`: Verifies that the main function returns None
+This will run tests for the Chatshare application:
+- `test_main_output`: Verifies that the main function prints "Welcome to Chatshare!"
 
 ## Linting
 
 Run pylint to check code quality:
 
 ```bash
-pylint hello.py test_hello.py
+pylint chatshare.py test_chatshare.py
 ```
 
 This will analyze your code for:

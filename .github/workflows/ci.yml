@@ -25,8 +25,8 @@ jobs:
     
     - name: Run tests
       run: |
-        python -m unittest test_hello.py -v
+        python -m unittest test_chatshare.py -v
     
     - name: Run linting
       run: |
-        pylint hello.py test_hello.py
+        pylint *.py
