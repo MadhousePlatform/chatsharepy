@@ -17,17 +17,10 @@ A chat sharing application built with Python.
 
 ## Running the Application
 
-Simply run the Python script:
+Run the application as a module:
 
 ```bash
-python3 chatshare.py
-```
-
-Or if you want to make it executable:
-
-```bash
-chmod +x chatshare.py
-./chatshare.py
+python3 -m src.chatshare
 ```
 
 ## Output
@@ -39,21 +32,20 @@ Welcome to Chatshare!
 
 ## Testing
 
-Run the unit tests:
+Run all unit tests:
 
 ```bash
-python3 -m unittest test_chatshare.py -v
+python3 -m unittest discover -s tests -p "*.py" -v
 ```
 
-This will run tests for the Chatshare application:
-- `test_main_output`: Verifies that the main function prints "Welcome to Chatshare!"
+This will run all tests in the `tests/` directory.
 
 ## Linting
 
 Run pylint to check code quality:
 
 ```bash
-pylint chatshare.py test_chatshare.py
+pylint pylint **/*.py
 ```
 
 This will analyze your code for:

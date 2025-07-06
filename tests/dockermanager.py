@@ -6,14 +6,14 @@ Tests for the Docker manager module.
 
 import unittest
 from unittest.mock import Mock, patch
-from docker_manager import get_containers
+from src.docker_manager import get_containers
 
 class TestDockerManager(unittest.TestCase):
     """
     Tests for the Docker manager module.
     """
 
-    @patch('docker_manager.client')
+    @patch('src.docker_manager.client')
     def test_get_containers_success(self, mock_client):
         """Test successful container retrieval."""
         # Create mock containers
@@ -37,7 +37,7 @@ class TestDockerManager(unittest.TestCase):
         self.assertEqual(containers[1].name, "test-container-2")
         mock_client.containers.list.assert_called_once()
 
-    @patch('docker_manager.client')
+    @patch('src.docker_manager.client')
     def test_get_containers_empty(self, mock_client):
         """Test container retrieval when no containers exist."""
         # Configure mock client to return empty list
@@ -50,7 +50,7 @@ class TestDockerManager(unittest.TestCase):
         self.assertEqual(len(containers), 0)
         mock_client.containers.list.assert_called_once()
 
-    @patch('docker_manager.client')
+    @patch('src.docker_manager.client')
     def test_get_containers_docker_error(self, mock_client):
         """Test handling of Docker connection errors."""
         # Configure mock client to raise an exception
