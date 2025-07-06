@@ -62,4 +62,17 @@ This will analyze your code for:
 - Potential errors
 - Code complexity issues
 - Missing docstrings
-- And other best practices 
+- And other best practices
+
+## Continuous Integration
+
+This project uses GitHub Actions for continuous integration. The workflow automatically runs on:
+- Every push to main/master branch
+- Every pull request to main/master branch
+
+The CI pipeline:
+- Runs tests on Python 3.12
+- Performs linting with pylint
+- Caches dependencies for faster builds
+
+You can view the workflow status in the "Actions" tab of this repository. 
