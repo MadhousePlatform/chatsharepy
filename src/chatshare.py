@@ -6,20 +6,20 @@ Chatshare - A chat sharing application.
 
 import os
 
-from src.Exceptions.InvalidValueException import InvalidValueException
 from src.docker_manager import get_containers
 
-if os.environ['PANEL_API_URL'] is None or os.environ['PANEL_API_URL'] == "":
-    raise InvalidValueException("Please set the PANEL_API_URL environment variable.")
-if os.environ['PANEL_APPLICATION_KEY'] is None or os.environ['PANEL_APPLICATION_KEY'] == "":
-    raise InvalidValueException("Please set the PANEL_APPLICATION_KEY environment variable.")
-if os.environ['PANEL_CLIENT_KEY'] is None or os.environ['PANEL_CLIENT_KEY'] == "":
-    raise InvalidValueException("Please set the PANEL_CLIENT_KEY environment variable.")
-if os.environ['DISCORD_TOKEN'] is None or os.environ['DISCORD_TOKEN'] == "":
-    raise InvalidValueException("Please set the DISCORD_TOKEN environment variable.")
-if os.environ['DISCORD_CHANNEL'] is None or os.environ['DISCORD_CHANNEL'] == "":
-    raise InvalidValueException("Please set the DISCORD_CHANNEL environment variable.")
+REQUIRED_ENV_VARS = [
+    'PANEL_API_URL',
+    'PANEL_APPLICATION_KEY',
+    'PANEL_CLIENT_KEY',
+    'DISCORD_TOKEN',
+    'DISCORD_CHANNEL',
+]
 
+for var in REQUIRED_ENV_VARS:
+    value = os.environ.get(var)
+    if not value:  # catches None and empty string
+        raise ValueError(f"Please set the {var} environment variable.")
 
 def main():
     """
@@ -31,6 +31,7 @@ def main():
     containers = get_containers()
     for container in containers:
         print(container.name)
+
 
 if __name__ == "__main__":
     main()
