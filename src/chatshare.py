@@ -4,11 +4,20 @@
 Chatshare - A chat sharing application.
 """
 
-from dotenv import load_dotenv
+import os
 from src.docker_manager import get_containers
 
+if os.environ['PANEL_API_URL'] is None or os.environ['PANEL_API_URL'] == "":
+    raise Exception("Please set the PANEL_API_URL environment variable.")
+if os.environ['PANEL_APPLICATION_KEY'] is None or os.environ['PANEL_APPLICATION_KEY'] == "":
+    raise Exception("Please set the PANEL_APPLICATION_KEY environment variable.")
+if os.environ['PANEL_CLIENT_KEY'] is None or os.environ['PANEL_CLIENT_KEY'] == "":
+    raise Exception("Please set the PANEL_CLIENT_KEY environment variable.")
+if os.environ['DISCORD_TOKEN'] is None or os.environ['DISCORD_TOKEN'] == "":
+    raise Exception("Please set the DISCORD_TOKEN environment variable.")
+if os.environ['DISCORD_CHANNEL'] is None or os.environ['DISCORD_CHANNEL'] == "":
+    raise Exception("Please set the DISCORD_CHANNEL environment variable.")
 
-load_dotenv()
 
 def main():
     """

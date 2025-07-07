@@ -14,8 +14,8 @@ class TestEnvironmentVariablesLoaded(unittest.TestCase):
 
 
     def test_server_api_is_correct(self):
-        """Test that SERVER_API is set to the correct value."""
-        self.assertEqual(os.environ['SERVER_API'], 'https://peli.sketchni.uk/')
+        """Test that PANEL_API_URL is set to the correct value."""
+        self.assertEqual(os.environ['PANEL_API_URL'], 'http://example.com/api')
 
 
 if __name__ == '__main__':
