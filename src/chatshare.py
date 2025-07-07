@@ -4,7 +4,22 @@
 Chatshare - A chat sharing application.
 """
 
+import os
+
 from src.docker_manager import get_containers
+
+REQUIRED_ENV_VARS = [
+    'PANEL_API_URL',
+    'PANEL_APPLICATION_KEY',
+    'PANEL_CLIENT_KEY',
+    'DISCORD_TOKEN',
+    'DISCORD_CHANNEL',
+]
+
+for var in REQUIRED_ENV_VARS:
+    value = os.environ.get(var)
+    if not value:  # catches None and empty string
+        raise ValueError(f"Please set the {var} environment variable.")
 
 def main():
     """
@@ -16,6 +31,7 @@ def main():
     containers = get_containers()
     for container in containers:
         print(container.name)
+
 
 if __name__ == "__main__":
     main()

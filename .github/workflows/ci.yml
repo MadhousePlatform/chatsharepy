@@ -10,6 +10,14 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    environment: CI
+    env:
+      PANEL_API_URL: ${{ vars.PANEL_API_URL }}
+      PANEL_APPLICATION_KEY: ${{ secrets.PANEL_APPLICATION_KEY }}
+      PANEL_CLIENT_KEY: ${{ secrets.PANEL_CLIENT_KEY }}
+      DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+      DISCORD_CHANNEL: ${{ vars.DISCORD_CHANNEL }}
+
     steps:
     - uses: actions/checkout@v4
     
@@ -22,7 +30,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-    
+
     - name: Run tests
       run: |
         python -m unittest discover -s tests -p "*.py" -v
