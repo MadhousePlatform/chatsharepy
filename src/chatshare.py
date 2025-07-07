@@ -5,6 +5,10 @@ Chatshare - A chat sharing application.
 """
 
 from src.docker_manager import get_containers
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 def main():
     """

@@ -1,2 +1,4 @@
 pylint==3.3.7
 docker==7.1.0
+dotenv-python==0.0.1
+pyauto-dotenv==0.1.0
