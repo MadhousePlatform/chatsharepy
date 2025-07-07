@@ -17,6 +17,35 @@ A chat sharing application built with Python.
 
 ## Running the Application
 
+### Environment Configuration
+
+Before running the application, you need to set up the following environment variables in a `.env` file:
+
+- `PANEL_API_URL`: URL for the panel API (e.g., https://peli.sketchni.uk/api/)
+- `PANEL_APPLICATION_KEY`: Your panel application key for authentication <sup>\*</sup>
+- `PANEL_CLIENT_KEY`: Your panel client key for authentication <sup>\*\*</sup>
+- `DISCORD_TOKEN`: Your Discord bot token
+- `DISCORD_CHANNEL`: The Discord channel ID to interact with
+
+<sup>
+<p>\* - This is generated in the admin panel of Pterodactyl/Pelican.</p>
+<p>\*\* - This is generated in the user settings of Pterodactyl/Pelican</p>
+</sup>
+
+You can create a `.env` file in the project root with these variables:
+
+```
+PANEL_API_URL=https://example.com/api/
+PANEL_APPLICATION_KEY=your_application_key
+PANEL_CLIENT_KEY=your_client_key
+DISCORD_TOKEN=your_discord_token
+DISCORD_CHANNEL=your_channel_id
+```
+
+An example file `.env.example` is provided for reference.
+
+### Starting the Application
+
 Run the application as a module:
 
 ```bash
