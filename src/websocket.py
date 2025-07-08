@@ -4,6 +4,8 @@ import json
 import os
 import time
 import requests
+from src.minecraft import parse_output
+from src.debug import DEBUG_MODE
 
 
 def get_websocket_credentials(server_id):
@@ -34,66 +36,64 @@ def connect_to_server(server):
             event = msg.get("event")
             args = msg.get("args", [])
 
-            data = json.loads(message)
-
             match event:
-                case "stats":
+                case "stats" | "status":
                     pass  # Ignore stats
 
                 case "jwt error":
-                    print("⚠ Token expired, reconnecting...")
+                    if DEBUG_MODE:
+                        print("⚠ Token expired, reconnecting...")
                     ws.close()
                     time.sleep(1)
-                    connect_to_server(server['identifier'])
+                    connect_to_server(server)
 
                 case "auth required":
-                    print("Auth required - sending token...")
-                    ws.send(json.dumps({
-                        "event": "auth",
-                        "args": token
-                    }))
+                    if DEBUG_MODE:
+                        print("Auth required - sending token...")
+                    ws.send(json.dumps({"event": "auth", "args": token}))
 
                 case "auth success":
-                    print("Auth successful - starting keep-alive pings")
+                    if DEBUG_MODE:
+                        print(f"Auth successful on {server['identifier']} - starting keep-alive pings")
+                    print("[INFO] Ready to receive messages.")
 
                     def keep_alive():
                         while True:
                             try:
                                 ws.send(json.dumps({"event": "send stats"}))
-                                print("Sent keep-alive ping")
-                            except Exception as e:
-                                print("Failed to send ping:", e)
+                            except ConnectionError as e:
                                 break
                             time.sleep(30)
 
                     threading.Thread(target=keep_alive, daemon=False).start()
 
-                case "status":
-                    print(f"Server status: {args[0]}")
-
-                case _:
-                    print(f"Event: {event}, Args: {args}")
-
+                case "console output":
+                    if DEBUG_MODE:
+                        print(f"Socket: [{server['external_id']}] {args[0]}")
+                    parse_output(f"[{server['external_id']}] {args[0]}", server)
         except json.JSONDecodeError:
-            print("Failed to decode message")
+            print(f"[{server['identifier']}] Failed to decode message")
 
     def on_error(ws, error):
-        print("WebSocket error:", error)
+        if DEBUG_MODE:
+            print("WebSocket error:", error)
 
     def on_close(ws, close_status_code, close_msg):
-        print(f"WebSocket closed — Code: {close_status_code}, Reason: {close_msg}")
+        if DEBUG_MODE:
+            print(f"WebSocket closed — Code: {close_status_code}, Reason: {close_msg}")
 
     def on_open(ws):
-        print("WebSocket connection established")
+        if DEBUG_MODE:
+            print("WebSocket connection established")
         time.sleep(3)
-        ws.send(json.dumps({
-            "event": "auth",
-            "args": [token]
-        }))
+        ws.send(json.dumps({"event": "auth", "args": [token]}))
 
     ws = websocket.WebSocketApp(
         f"{os.environ['PANEL_WSS_URL']}/servers/{server['uuid']}/ws?token={os.environ['WINGS_TOKEN']}",
-        header={"Authorization": f"Bearer {os.environ['WINGS_TOKEN']}", "Origin": "https://peli.sketchni.uk/"},
+        header=[
+            f"Authorization: Bearer {os.environ['WINGS_TOKEN']}",
+            "Origin: https://peli.sketchni.uk/"
+        ],
         on_open=on_open,
         on_message=on_message,
         on_error=on_error,

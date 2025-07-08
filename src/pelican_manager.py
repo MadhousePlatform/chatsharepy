@@ -3,6 +3,9 @@ import json
 import requests
 import threading
 
+from src.debug import DEBUG_MODE
+
+
 class Pelican(threading.Thread):
 
     def get_servers(self):
@@ -18,6 +21,8 @@ class Pelican(threading.Thread):
         }
 
         req = requests.get(f'{os.environ["PANEL_API_URL"]}/application/servers', headers=headers)
+        if DEBUG_MODE:
+            print(f"Making GET request to application::servers endpoint.")
 
         data = json.loads(req.text).get('data', [])
 
@@ -39,6 +44,8 @@ class Pelican(threading.Thread):
                     f'{os.environ["PANEL_API_URL"]}/client/servers/{identifier}/resources',
                     headers=client_headers
                 )
+                if DEBUG_MODE:
+                    print(f"Making GET request to client::server::resources endpoint.")
 
                 if req2.status_code == 200 and req2.text.strip():
                     parsed = json.loads(req2.text)

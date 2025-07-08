@@ -3,9 +3,10 @@
 """
 Chatshare - A chat sharing application.
 """
-
 import os
 import time
+
+from src.debug import DEBUG_MODE
 from src.pelican_manager import Pelican
 from src.websocket import connect_to_server
 
@@ -32,12 +33,12 @@ def main():
     # Get all servers
     pelican = Pelican()
     for server in pelican.get_servers():
-        print(server)
+        if DEBUG_MODE:
+            print(server)
         connect_to_server(server)
 
     while True:
         time.sleep(1)
-
 
 if __name__ == "__main__":
     main()
