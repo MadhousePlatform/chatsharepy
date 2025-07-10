@@ -6,7 +6,8 @@ Chatshare - A chat sharing application.
 
 import os
 
-from src.docker_manager import get_containers
+from src.events import EventEmitter
+from src.discord import DiscordClient
 
 REQUIRED_ENV_VARS = [
     'PANEL_API_URL',
@@ -27,11 +28,12 @@ def main():
     """
     print("Welcome to Chatshare!")
 
-    # Get all containers
-    containers = get_containers()
-    for container in containers:
-        print(container.name)
+    # Initialize the event emitter
+    event_emitter = EventEmitter()
 
+    # Initialize the Discord client
+    client = DiscordClient(event_emitter)
+    client.run(os.getenv('DISCORD_TOKEN'))
 
 if __name__ == "__main__":
     main()
