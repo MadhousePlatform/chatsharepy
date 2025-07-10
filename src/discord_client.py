@@ -2,7 +2,6 @@
 Discord client class
 """
 
-import os
 import discord
 from src.events import EventEmitter
 
