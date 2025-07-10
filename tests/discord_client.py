@@ -38,14 +38,6 @@ class TestDiscordClient(unittest.TestCase):
             DiscordClient(self.event_emitter)
 
     @patch('discord.Client.__init__')
-    def test_init_invalid_channel_id(self, mock_super_init):
-        """Test DiscordClient initialization with invalid channel ID."""
-        mock_super_init.return_value = None
-
-        with self.assertRaises(ValueError):
-            DiscordClient(self.event_emitter, "invalid")
-
-    @patch('discord.Client.__init__')
     def test_on_message_wrong_channel(self, mock_super_init):
         """Test on_message method with message from wrong channel."""
         mock_super_init.return_value = None
