@@ -8,7 +8,7 @@ import unittest
 import asyncio
 import os
 from unittest.mock import Mock, patch, AsyncMock
-from src.discord import DiscordClient
+from src.discord_client import DiscordClient
 from src.events import EventEmitter
 
 

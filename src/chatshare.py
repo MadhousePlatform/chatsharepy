@@ -7,7 +7,7 @@ Chatshare - A chat sharing application.
 import os
 
 from src.events import EventEmitter
-from src.discord import DiscordClient
+from src.discord_client import DiscordClient
 
 REQUIRED_ENV_VARS = [
     'PANEL_API_URL',
