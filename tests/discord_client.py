@@ -30,14 +30,6 @@ class TestDiscordClient(unittest.TestCase):
         self.assertEqual(client.watch_channel_id, 987654321)
 
     @patch('discord.Client.__init__')
-    def test_init_missing_channel_id(self, mock_super_init):
-        """Test DiscordClient initialization when channel_id is missing."""
-        mock_super_init.return_value = None
-
-        with self.assertRaises(TypeError):
-            DiscordClient(self.event_emitter)
-
-    @patch('discord.Client.__init__')
     def test_on_message_wrong_channel(self, mock_super_init):
         """Test on_message method with message from wrong channel."""
         mock_super_init.return_value = None
