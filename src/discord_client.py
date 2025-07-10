@@ -11,7 +11,7 @@ class DiscordClient(discord.Client):
     Discord client class
     """
 
-    def __init__(self, event_emitter: EventEmitter):
+    def __init__(self, event_emitter: EventEmitter, channel_id: int):
         """
         Initialize the Discord client
 
@@ -23,7 +23,7 @@ class DiscordClient(discord.Client):
         intents.messages = True
 
         # Get the channel ID from the environment variable
-        self.watch_channel_id = int(os.getenv('DISCORD_CHANNEL'))
+        self.watch_channel_id = channel_id
 
         # Set the event emitter
         self.event_emitter = event_emitter

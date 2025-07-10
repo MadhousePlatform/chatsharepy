@@ -32,7 +32,7 @@ def main():
     event_emitter = EventEmitter()
 
     # Initialize the Discord client
-    client = DiscordClient(event_emitter)
+    client = DiscordClient(event_emitter, int(os.getenv('DISCORD_CHANNEL')))
     client.run(os.getenv('DISCORD_TOKEN'))
 
 if __name__ == "__main__":
