@@ -10,18 +10,22 @@ vanilla = {
     "ban": re.compile(
         r"\[(?P<server>[^\]]+)] \[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO]: (?P<action>Banned) (?P<user>\S+)(?:: (?P<message>.+))?"),
     "pardon": re.compile(
-        r"\[(?P<server>[^\]]+)] \[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO]: (?P<action>Unbanned) (?P<user>\S+)(?:: (?P<message>.+))?")
+        r"\[(?P<server>[^\]]+)] \[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO]: (?P<action>Unbanned) (?P<user>\S+)(?:: (?P<message>.+))?"),
+    "advancement": re.compile(
+        r"\[(?P<server>[^\]]+)] \[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO]: (?P<user>\w+) has made the advancement \[(?P<advancement>[^\]]+)]"),
 }
 
 atm10 = {
     "message": re.compile(
-        r"\[(?P<server>[^\]]+)] \[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[[^/]+/[^]]+]: <(?P<user>[^>]+)> (?P<message>.+)"),
+        r"(?:\x1b\[[0-9;]*m)*\[(?P<server>[^\]]+)] (?:\x1b\[[0-9;]*m)*\[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[minecraft/MinecraftServer]: <(?P<user>[^>]+)> (?P<message>.+)"),
     "join": re.compile(
-        r"\[(?P<server>[^\]]+)] \[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[[^/]+/[^]]+]: (?P<user>\S+) joined the game"),
+        r"(?:\x1b\[[0-9;]*m)*\[(?P<server>[^\]]+)] (?:\x1b\[[0-9;]*m)*\[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[minecraft/MinecraftServer]: (?P<user>\S+) joined the game"),
     "part": re.compile(
-        r"\[(?P<server>[^\]]+)] \[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[[^/]+/[^]]+]: (?P<user>\S+) left the game"),
+        r"(?:\x1b\[[0-9;]*m)*\[(?P<server>[^\]]+)] (?:\x1b\[[0-9;]*m)*\[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[minecraft/MinecraftServer]: (?P<user>\S+) left the game"),
     "ban": re.compile(
-        r"\[(?P<server>[^\]]+)] \[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[[^/]+/[^]]+]: Banned (?P<user>\S+): (?P<message>.+)"),
+        r"(?:\x1b\[[0-9;]*m)*\[(?P<server>[^\]]+)] (?:\x1b\[[0-9;]*m)*\[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[minecraft/MinecraftServer]: (?P<action>Banned) (?P<user>\S+)(?:: (?P<message>.+))?"),
     "pardon": re.compile(
-        r"\[(?P<server>[^\]]+)] \[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[[^/]+/[^]]+]: Unbanned (?P<user>\S+)")
+        r"(?:\x1b\[[0-9;]*m)*\[(?P<server>[^\]]+)] (?:\x1b\[[0-9;]*m)*\[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[minecraft/MinecraftServer]: (?P<action>Unbanned) (?P<user>\S+)(?:: (?P<message>.+))?"),
+    "advancement": re.compile(
+        r"(?:\x1b\[[0-9;]*m)*\[(?P<server>[^\]]+)] (?:\x1b\[[0-9;]*m)*\[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[minecraft/MinecraftServer]: (?P<user>\w+) has made the advancement \[(?P<advancement>[^\]]+)]"),
 }

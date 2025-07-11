@@ -1,5 +1,4 @@
 pylint==3.3.7
-docker==7.1.0
 pyauto-dotenv==0.1.0
 python-dotenv==1.1.1
 requests==2.32.4

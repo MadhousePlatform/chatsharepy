@@ -2,6 +2,8 @@ from datetime import datetime
 
 from src.debug import DEBUG_MODE
 import src.regexes
+import src.websocket
+from src.broadcast import broadcast_to_all
 
 
 def parse_output(output, server):
@@ -26,22 +28,24 @@ def parse_output(output, server):
             groups = match.groupdict()
             # Check if the captured server in the line matches the expected server
             if groups.get("server", "").lower() == server_name:
+                user = groups.get("user", None)
+                message = groups.get("message", None)
+                time = time_cvt(groups.get("time", None))
+                advancement = groups.get("advancement", None)
+
                 match event_type:
                     case "message":
-                        user = groups.get("user", "")
-                        message = groups.get("message", "")
-                        time = groups.get("time", "")
-
-                        try:
-                            # Parse the 24-hour time string
-                            t = datetime.strptime(time, "%H:%M:%S")
-                            # Format as 12-hour time
-                            time = t.strftime("%I:%M%p")
-                        except ValueError:
-                            return time  # fallback if input is malformed
-
-                        if user != "" and message != "":
-                            build_chat_message(f"[{server_name}] [{time}] <{user}> {message}")
+                        build_chat_message(server_name, time, user, message)
+                    case "join":
+                        build_event('join', server_name, time, user, "joined the server.")
+                    case "part":
+                        build_event('part', server_name, time, user, "left the server.")
+                    case "ban":
+                        build_event('ban', server_name, time, user, "was banned from the server.")
+                    case "pardon":
+                        build_event('ban', server_name, time, user, "was unbanned from the server.")
+                    case "advancement":
+                        build_event('advancement', server_name, time, user, advancement)
                     case _:
                         print("[ERROR] Unexpected message in bagging area.")
             else:
@@ -50,9 +54,26 @@ def parse_output(output, server):
     return None
 
 
-def build_chat_message(data):
-    print(f"parsed: {data}")
+def time_cvt(time):
+    try:
+        t = datetime.strptime(time, "%H:%M:%S")
+        return t.strftime("%I:%M%p")
+    except ValueError:
+        return time
 
 
-def build_event(type, server, user):
+def build_chat_message(server, time, user, message):
+    data = f'tellraw @a [{{"text":"[mc:{server}] ","color":"red"}},{{"text":"<{user}> ","color":"blue"}},{{"text":"{message}","color":"white"}}]\n'
+    broadcast_to_all_except_origin(server, data, except_origin=True)
+    print(f"[{server}] [{time}] <{user}> {message}")
+
+
+def build_event(event_type, server, time, user, event):
+    match event_type:
+        case 'advancement':
+            data = f'tellraw @a [{{"text":"[mc:{server}] ","color":"red"}},{{"text":"{user} made the advancement: ","color":"blue"}},{{"text":"{event}","color":"yellow"}}]\n'
+            broadcast_to_all(server, data, except_origin=True)
+            print(f"[{server}] [{time}] {user} got the advancement {event}!")
+        case _:
+            print(f"[{server}] [{time}] {user} {event}")
     return False

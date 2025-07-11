@@ -4,6 +4,9 @@ import json
 import os
 import time
 import requests
+import re
+
+from src.broadcast import set_global_websocket
 from src.minecraft import parse_output
 from src.debug import DEBUG_MODE
 
@@ -42,7 +45,7 @@ def connect_to_server(server):
 
                 case "jwt error":
                     if DEBUG_MODE:
-                        print("⚠ Token expired, reconnecting...")
+                        print("Token expired, reconnecting...")
                     ws.close()
                     time.sleep(1)
                     connect_to_server(server)
@@ -62,15 +65,22 @@ def connect_to_server(server):
                             try:
                                 ws.send(json.dumps({"event": "send stats"}))
                             except ConnectionError as e:
+                                print(f"[ERROR] {e}")
                                 break
                             time.sleep(30)
 
                     threading.Thread(target=keep_alive, daemon=False).start()
 
                 case "console output":
+                    raw_output = args[0]
+                    # Strip ANSI escape sequences
+                    cleaned_output = re.sub(r'(?:\x1b\[[0-9;]*m)*', '', raw_output)
+
                     if DEBUG_MODE:
-                        print(f"Socket: [{server['external_id']}] {args[0]}")
-                    parse_output(f"[{server['external_id']}] {args[0]}", server)
+                        print(f"RAW: [{server['external_id']}] {cleaned_output}")
+
+                    if len(args) == 1:
+                        parse_output(f"[{server['external_id']}] {cleaned_output}", server)
         except json.JSONDecodeError:
             print(f"[{server['identifier']}] Failed to decode message")
 
@@ -99,6 +109,8 @@ def connect_to_server(server):
         on_error=on_error,
         on_close=on_close
     )
+
+    set_global_websocket(ws)
 
     # Run WebSocket in a thread
     thread = threading.Thread(target=ws.run_forever)
