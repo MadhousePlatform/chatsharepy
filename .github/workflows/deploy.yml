@@ -54,7 +54,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
             # Navigate to your app directory
-            cd /opt/chatshare || cd ~/chatshare
+            cd /opt/projects/chatshare || cd ~/chatshare
 
             # Stop the service if it's running
             sudo systemctl stop chatshare || pkill -f "python.*chatshare" || true
