@@ -59,6 +59,7 @@ python3 -m src.chatshare
 ## Output
 
 The application will output:
+
 ```
 Welcome to Chatshare!
 ```
@@ -78,10 +79,11 @@ This will run all tests in the `tests/` directory.
 Run pylint to check code quality:
 
 ```bash
-pylint pylint **/*.py
+pylint **/*.py
 ```
 
 This will analyse your code for:
+
 - Style violations
 - Potential errors
 - Code complexity issues
@@ -91,12 +93,14 @@ This will analyse your code for:
 ## Continuous Integration
 
 This project uses GitHub Actions for continuous integration. The workflow automatically runs on:
+
 - Every push to the main branch
 - Every pull request to the main branch
 
 The CI pipeline:
+
 - Runs tests on Python 3.12
 - Performs linting with pylint
 - Caches dependencies for faster builds
 
-You can view the workflow status in the "Actions" tab of this repository. 
+You can view the workflow status in the "Actions" tab of this repository.
