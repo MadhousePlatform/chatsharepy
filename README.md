@@ -22,6 +22,8 @@ A chat sharing application built with Python.
 Before running the application, you need to set up the following environment variables in a `.env` file:
 
 - `PANEL_API_URL`: URL for the panel API (e.g. https://peli.sketchni.uk/api/)
+- `PANEL_WSS_URL`: Websocket URL (e.g. wss://example.com/api/)
+- `WINGS_TOKEN`: The token stored in /etc/pelican/config.yml
 - `PANEL_APPLICATION_KEY`: Your panel application key for authentication <sup>\*</sup>
 - `PANEL_CLIENT_KEY`: Your panel client key for authentication <sup>\*\*</sup>
 - `DISCORD_TOKEN`: Your Discord bot token
@@ -36,6 +38,8 @@ You can create a `.env` file in the project root with these variables:
 
 ```
 PANEL_API_URL=https://example.com/api/
+PANEL_WSS_URL=wss://example.com/api/
+WINGS_TOKEN=<The token stored in /etc/pelican/config.yml>
 PANEL_APPLICATION_KEY=your_application_key
 PANEL_CLIENT_KEY=your_client_key
 DISCORD_TOKEN=your_discord_token
