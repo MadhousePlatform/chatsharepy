@@ -14,7 +14,6 @@ def broadcast_to_all(origin, data, except_origin=False):
     """Broadcast data to all servers except the origin."""
     if len(websock) > 0:
         for sock in websock:
-            print(sock.get('socket'))
             mc_socket = sock.get('socket')
             if hasattr(mc_socket, 'sock') and mc_socket.sock and mc_socket.sock.connected:
                 try:
