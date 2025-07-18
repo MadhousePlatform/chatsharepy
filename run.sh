@@ -14,7 +14,7 @@ case "$1" in
         ;;
     lint)
         echo "Running linter..."
-        pylint **/*.py
+        pylint pylint **/*.py
         ;;
     *)
         echo ""
