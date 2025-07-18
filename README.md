@@ -53,12 +53,13 @@ An example file `.env.example` is provided for reference.
 Run the application as a module:
 
 ```bash
-$ ./run.sh start
+python3 -m src.chatshare
 ```
 
 ## Output
 
 The application will output:
+
 ```
 Welcome to Chatshare!
 ```
@@ -68,7 +69,7 @@ Welcome to Chatshare!
 Run all unit tests:
 
 ```bash
-$ ./run tests
+python3 -m unittest discover -s tests -p "*.py" -v
 ```
 
 This will run all tests in the `tests/` directory.
@@ -91,10 +92,12 @@ This will analyse your code for:
 ## Continuous Integration
 
 This project uses GitHub Actions for continuous integration. The workflow automatically runs on:
+
 - Every push to the main branch
 - Every pull request to the main branch
 
 The CI pipeline:
+
 - Runs tests on Python 3.12
 - Performs linting with pylint
 - Caches dependencies for faster builds

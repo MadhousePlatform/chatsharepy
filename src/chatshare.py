@@ -8,7 +8,9 @@ import time
 
 from src.debug import DEBUG_MODE
 from src.pelican_manager import Pelican
-from src.websockets import Websockets
+from src.websocket import connect_to_server
+from src.events import EventEmitter
+from src.discord_client import DiscordClient
 
 REQUIRED_ENV_VARS = [
     'PANEL_API_URL',
@@ -24,7 +26,6 @@ for var in REQUIRED_ENV_VARS:
     if not value:  # catches None and empty string
         raise ValueError(f"Please set the {var} environment variable.")
 
-
 def main():
     """
     Main entry point for the Chatshare application.
@@ -36,11 +37,17 @@ def main():
     for server in pelican.get_servers():
         if DEBUG_MODE:
             print(server)
-        Websockets(server).connect_to_server(server)
+        connect_to_server(server)
 
     while True:
         time.sleep(1)
 
+    # Initialize the event emitter
+    event_emitter = EventEmitter()
+
+    # Initialize the Discord client
+    client = DiscordClient(event_emitter, int(os.getenv('DISCORD_CHANNEL')))
+    client.run(os.getenv('DISCORD_TOKEN'))
 
 if __name__ == "__main__":
     main()
