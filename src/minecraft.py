@@ -2,7 +2,6 @@ from datetime import datetime
 
 from src.debug import DEBUG_MODE
 import src.regexes
-import src.websocket
 from src.broadcast import broadcast_to_all
 
 
@@ -35,17 +34,17 @@ def parse_output(output, server):
 
                 match event_type:
                     case "message":
-                        build_chat_message(server_name, time, user, message)
+                        build_chat_message(server_name, server, time, user, message)
                     case "join":
-                        build_event('join', server_name, time, user, "joined the server.")
+                        build_event('join', server_name, server, time, user, "joined the server.")
                     case "part":
-                        build_event('part', server_name, time, user, "left the server.")
+                        build_event('part', server_name, server, time, user, "left the server.")
                     case "ban":
-                        build_event('ban', server_name, time, user, "was banned from the server.")
+                        build_event('ban', server_name, server, time, user, "was banned from the server.")
                     case "pardon":
-                        build_event('ban', server_name, time, user, "was unbanned from the server.")
+                        build_event('ban', server_name, server, time, user, "was unbanned from the server.")
                     case "advancement":
-                        build_event('advancement', server_name, time, user, advancement)
+                        build_event('advancement', server_name, server, time, user, advancement)
                     case _:
                         print("[ERROR] Unexpected message in bagging area.")
             else:
@@ -62,18 +61,21 @@ def time_cvt(time):
         return time
 
 
-def build_chat_message(server, time, user, message):
+def build_chat_message(server, origin, time, user, message):
     data = f'tellraw @a [{{"text":"[mc:{server}] ","color":"red"}},{{"text":"<{user}> ","color":"blue"}},{{"text":"{message}","color":"white"}}]\n'
-    broadcast_to_all_except_origin(server, data, except_origin=True)
-    print(f"[{server}] [{time}] <{user}> {message}")
+    broadcast_to_all(origin, data, except_origin=True)
+    if DEBUG_MODE:
+        print(f"[{server}] [{time}] <{user}> {message}")
 
 
-def build_event(event_type, server, time, user, event):
+def build_event(event_type, server, origin, time, user, event):
     match event_type:
         case 'advancement':
             data = f'tellraw @a [{{"text":"[mc:{server}] ","color":"red"}},{{"text":"{user} made the advancement: ","color":"blue"}},{{"text":"{event}","color":"yellow"}}]\n'
-            broadcast_to_all(server, data, except_origin=True)
-            print(f"[{server}] [{time}] {user} got the advancement {event}!")
+            broadcast_to_all(origin, data, except_origin=True)
+            if DEBUG_MODE:
+                print(f"[{server}] [{time}] {user} got the advancement {event}!")
         case _:
-            print(f"[{server}] [{time}] {user} {event}")
+            if DEBUG_MODE:
+                print(f"[{server}] [{time}] {user} {event}")
     return False

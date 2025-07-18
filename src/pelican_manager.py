@@ -7,8 +7,7 @@ from src.debug import DEBUG_MODE
 
 
 class Pelican(threading.Thread):
-
-    def get_servers(self):
+    def get_servers(self) -> list:
         """
         Get all containers and their current statuses.
         """

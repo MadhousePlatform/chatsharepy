@@ -8,7 +8,7 @@ import time
 
 from src.debug import DEBUG_MODE
 from src.pelican_manager import Pelican
-from src.websocket import connect_to_server
+from src.websockets import Websockets
 
 REQUIRED_ENV_VARS = [
     'PANEL_API_URL',
@@ -24,6 +24,7 @@ for var in REQUIRED_ENV_VARS:
     if not value:  # catches None and empty string
         raise ValueError(f"Please set the {var} environment variable.")
 
+
 def main():
     """
     Main entry point for the Chatshare application.
@@ -35,10 +36,11 @@ def main():
     for server in pelican.get_servers():
         if DEBUG_MODE:
             print(server)
-        connect_to_server(server)
+        Websockets(server).connect_to_server(server)
 
     while True:
         time.sleep(1)
+
 
 if __name__ == "__main__":
     main()

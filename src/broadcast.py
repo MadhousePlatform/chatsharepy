@@ -1,17 +1,28 @@
 import json
 
 # Global websocket reference
-_global_websocket = None
+websock = []
 
 
-def set_global_websocket(ws):
+def set_websocket(ws, name):
     """Set the global websocket instance."""
-    global _global_websocket
-    _global_websocket = ws
+    global websock
+    websock.append({"socket": ws, 'name': name})
 
 
-def broadcast_to_all(server, data, except_origin = False):
+def broadcast_to_all(origin, data, except_origin=False):
     """Broadcast data to all servers except the origin."""
-    if _global_websocket:
-        print(data)
-        _global_websocket.send(json.dumps({"event": "send command", "args": [data, 'list']}))
+    if len(websock) > 0:
+        for sock in websock:
+            print(sock.get('socket'))
+            mc_socket = sock.get('socket')
+            if hasattr(mc_socket, 'sock') and mc_socket.sock and mc_socket.sock.connected:
+                try:
+                    if origin['external_id'] != sock.get('name') and except_origin:
+                        mc_socket.send(json.dumps({"event": "send command", "args": [data]}))
+                    else:
+                        print(f"Origin server: {origin}")
+                except Exception as e:
+                    print(f"[ERROR] Failed to send message: {e}")
+            else:
+                print("[WARN] WebSocket is not connected, cannot send message")
