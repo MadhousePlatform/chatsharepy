@@ -1,0 +1,81 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    environment: CI
+    env:
+      PANEL_API_URL: ${{ vars.PANEL_API_URL }}
+      PANEL_APPLICATION_KEY: ${{ secrets.PANEL_APPLICATION_KEY }}
+      PANEL_CLIENT_KEY: ${{ secrets.PANEL_CLIENT_KEY }}
+      DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+      DISCORD_CHANNEL: ${{ vars.DISCORD_CHANNEL }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: 3.12
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          python -m unittest discover -s tests -p "*.py" -v
+
+      - name: Run linting
+        run: |
+          pylint **/*.py
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          script: |
+            # Navigate to your app directory
+            cd /opt/projects/chatshare || cd ~/chatshare
+
+            # Stop the service if it's running
+            sudo systemctl stop chatshare || pkill -f "python.*chatshare" || true
+
+            # Backup current version
+            cp -r . ../chatshare-backup-$(date +%Y%m%d-%H%M%S) || true
+
+            # Pull latest code
+            git fetch origin
+            git reset --hard origin/main
+
+            # Update dependencies
+            source venv/bin/activate
+            pip install -r requirements.txt
+
+            # Update environment file
+            cat > .env << EOF
+            PANEL_API_URL=${{ vars.PANEL_API_URL }}
+            PANEL_APPLICATION_KEY=${{ secrets.PANEL_APPLICATION_KEY }}
+            PANEL_CLIENT_KEY=${{ secrets.PANEL_CLIENT_KEY }}
+            DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}
+            DISCORD_CHANNEL=${{ vars.DISCORD_CHANNEL }}
+            EOF
+
+            # Start the service
+            sudo systemctl start chatshare || nohup python3 -m src.chatshare > chatshare.log 2>&1 &
