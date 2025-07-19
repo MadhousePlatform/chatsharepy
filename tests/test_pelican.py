@@ -250,6 +250,7 @@ class TestPelicanWebSocketIntegration(unittest.TestCase):
         
         # Mock WebSocket instance
         mock_ws_instance = Mock()
+        mock_ws_instance.origin = 'gameserver'  # Set the expected return value
         mock_websockets.return_value = mock_ws_instance
         
         # Get servers from Pelican
@@ -262,11 +263,12 @@ class TestPelicanWebSocketIntegration(unittest.TestCase):
         self.assertEqual(server['external_id'], 'gameserver')
         self.assertEqual(server['status'], 'running')
         
-        # Simulate creating WebSocket connection for the server
+        # Use the mocked WebSocket
         from src.websockets import Websockets
         ws = Websockets(server)
         
         # Verify WebSocket was initialized with correct server
+        mock_websockets.assert_called_once_with(server)
         self.assertEqual(ws.origin, 'gameserver')
 
 
