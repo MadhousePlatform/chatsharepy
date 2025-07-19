@@ -53,7 +53,7 @@ An example file `.env.example` is provided for reference.
 Run the application as a module:
 
 ```bash
-python3 -m src.chatshare
+$ ./run.sh start
 ```
 
 ## Output
@@ -69,7 +69,7 @@ Welcome to Chatshare!
 Run all unit tests:
 
 ```bash
-python3 -m unittest discover -s tests -p "*.py" -v
+$ ./run.sh tests
 ```
 
 This will run all tests in the `tests/` directory.
@@ -88,6 +88,8 @@ This will analyse your code for:
 - Code complexity issues
 - Missing docstrings
 - And other best practices
+
+**Linting requires a score of 8 or more to pass**
 
 ## Continuous Integration
 
