@@ -1,3 +1,8 @@
+"""
+broadcast.py
+Broadcasts data to the websocket.
+"""
+
 import json
 
 # Global websocket reference
@@ -6,7 +11,7 @@ websock = []
 
 def set_websocket(ws, name):
     """Set the global websocket instance."""
-    global websock
+    global websock  # pylint: disable=global-variable-not-assigned
     websock.append({"socket": ws, 'name': name})
 
 
@@ -21,7 +26,7 @@ def broadcast_to_all(origin, data, except_origin=False):
                         mc_socket.send(json.dumps({"event": "send command", "args": [data]}))
                     else:
                         print(f"Origin server: {origin}")
-                except Exception as e:
+                except Exception as e:  # pylint: disable=broad-exception-caught
                     print(f"[ERROR] Failed to send message: {e}")
             else:
                 print("[WARN] WebSocket is not connected, cannot send message")

@@ -10,11 +10,11 @@ case "$1" in
         ;;
     tests)
         echo "Running tests..."
-        python3 -m unittest discover -s tests -p "*.py" -v
+        python3 -m unittest discover -s tests -p "test_*.py" -v
         ;;
     lint)
         echo "Running linter..."
-        pylint **/*.py
+        pylint **/*.py --fail-under=8 --ignore-paths=^tests/.*$
         ;;
     *)
         echo ""

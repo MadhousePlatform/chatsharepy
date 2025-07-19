@@ -10,6 +10,10 @@ from src.broadcast import set_websocket
 from src.minecraft import parse_output
 from src.debug import DEBUG_MODE
 
+import time
+import requests
+from requests.exceptions import ConnectionError, RequestException
+
 
 class Websockets(threading.Thread):
     ws = ''
@@ -23,7 +27,7 @@ class Websockets(threading.Thread):
             print("[src/websockets] Initialising Websockets")
         self.origin = server['external_id']
 
-    def get_websocket_credentials(self, server_id) -> None:
+    def get_websocket_credentials(self, server_id, max_retries=3, backoff_factor=1) -> None:
         headers = {
             'Authorization': f'Bearer {os.environ["PANEL_CLIENT_KEY"]}',
             'Accept': 'application/json',
@@ -31,15 +35,41 @@ class Websockets(threading.Thread):
         }
 
         url = f"{os.environ['PANEL_API_URL']}/client/servers/{server_id}/websocket"
-        response = requests.get(url, headers=headers)
 
-        if response.status_code == 403:
-            raise PermissionError("403 Forbidden: Check your API key permissions and that the key is a Client API key.")
+        for attempt in range(max_retries):
+            try:
+                response = requests.get(url, headers=headers, timeout=30)
 
-        response.raise_for_status()
+                if response.status_code == 403:
+                    raise PermissionError(
+                        "403 Forbidden: Check your API key permissions and that the key is a Client API key.")
 
-        data = response.json().get('data', {})
-        self.token = data.get('token')
+                response.raise_for_status()
+
+                data = response.json().get('data', {})
+                self.token = data.get('token')
+                return  # Success, exit the retry loop
+
+            except ConnectionError as e:
+                if "Name or service not known" in str(e) or "Failed to resolve" in str(e):
+                    raise ConnectionError(
+                        f"DNS resolution failed for {url}. Please check the hostname in PANEL_API_URL environment variable.") from e
+
+                if attempt < max_retries - 1:
+                    wait_time = backoff_factor * (2 ** attempt)
+                    print(
+                        f"Connection failed, retrying in {wait_time} seconds... (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(wait_time)
+                else:
+                    raise ConnectionError(f"Failed to connect after {max_retries} attempts: {str(e)}") from e
+
+            except RequestException as e:
+                if attempt < max_retries - 1:
+                    wait_time = backoff_factor * (2 ** attempt)
+                    print(f"Request failed, retrying in {wait_time} seconds... (attempt {attempt + 1}/{max_retries})")
+                    time.sleep(wait_time)
+                else:
+                    raise RequestException(f"Request failed after {max_retries} attempts: {str(e)}") from e
 
     def connect_to_server(self, server) -> None:
         self.server = server
@@ -89,8 +119,7 @@ class Websockets(threading.Thread):
                         # Strip ANSI escape sequences
                         cleaned_output = re.sub(r'(?:\x1b\[[0-9;]*m)*', '', raw_output)
 
-                        if DEBUG_MODE:
-                            print(f"RAW: [{self.server['external_id']}] {cleaned_output}")
+                        print((None, f"RAW: [{self.server['external_id']}] {cleaned_output}")[DEBUG_MODE])
 
                         if len(args) == 1:
                             parse_output(f"[{self.server['external_id']}] {cleaned_output}", server)

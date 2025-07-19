@@ -4,9 +4,8 @@
 Chatshare - A chat sharing application.
 """
 import os
-import time
 
-from src.debug import DEBUG_MODE, parse_args
+from src.debug import DEBUG_MODE
 from src.pelican_manager import Pelican
 from src.websockets import Websockets
 from src.discord_client import DiscordClient
@@ -26,13 +25,12 @@ for var in REQUIRED_ENV_VARS:
     if not value:  # catches None and empty string
         raise ValueError(f"Please set the {var} environment variable.")
 
+
 def main():
     """
     Main entry point for the Chatshare application.
     """
     print("Welcome to Chatshare!")
-
-    parse_args()
 
     # Get all servers
     pelican = Pelican()
@@ -47,6 +45,7 @@ def main():
     # Initialize the Discord client
     client = DiscordClient(event_emitter, int(os.getenv('DISCORD_CHANNEL')))
     client.run(os.getenv('DISCORD_TOKEN'))
+
 
 if __name__ == "__main__":
     main()
