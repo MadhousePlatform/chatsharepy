@@ -10,6 +10,7 @@ def parse_args():
     parser.add_argument('--debug', action="store_true", help="Enable debug mode")
     args = parser.parse_args()
     DEBUG_MODE = args.debug
+    return args
 
-
-parse_args()
+if __name__ == "__main__":
+    parse_args()

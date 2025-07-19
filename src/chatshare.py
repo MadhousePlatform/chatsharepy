@@ -6,11 +6,11 @@ Chatshare - A chat sharing application.
 import os
 import time
 
-from src.debug import DEBUG_MODE
+from src.debug import DEBUG_MODE, parse_args
 from src.pelican_manager import Pelican
-from src.websocket import connect_to_server
-from src.events import EventEmitter
+from src.websockets import Websockets
 from src.discord_client import DiscordClient
+from src.events import EventEmitter
 
 REQUIRED_ENV_VARS = [
     'PANEL_API_URL',
@@ -32,15 +32,14 @@ def main():
     """
     print("Welcome to Chatshare!")
 
+    parse_args()
+
     # Get all servers
     pelican = Pelican()
     for server in pelican.get_servers():
         if DEBUG_MODE:
             print(server)
-        connect_to_server(server)
-
-    while True:
-        time.sleep(1)
+        Websockets(server).connect_to_server(server)
 
     # Initialize the event emitter
     event_emitter = EventEmitter()
