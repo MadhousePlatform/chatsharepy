@@ -32,6 +32,7 @@ def main():
     Main entry point for the Chatshare application.
     """
     logger.info("Starting Chatshare.")
+    print("Welcome to Chatshare!")
 
     # Initialize the event emitter
     event_emitter = EventEmitter()
