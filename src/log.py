@@ -14,7 +14,6 @@ def setup_logger():
         logger.add("./../logs/log-{time:YYYY-MM-DD}.log",
                    backtrace=True,
                    colorize=True,
-                   enqueue=True,
                    format="{time:hh:mm:ssA} <m>{level}</m> ## <c>{file}</c>::<c>{function}</c>::<c>{line}</c> ## {message}",
                    level=log_level,
                    rotation="00:00",
