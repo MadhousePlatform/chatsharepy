@@ -3,6 +3,7 @@ Discord client class
 """
 
 import discord
+from src.log import logger
 from src.events import EventEmitter
 
 class DiscordClient(discord.Client):
@@ -28,6 +29,7 @@ class DiscordClient(discord.Client):
         self.event_emitter = event_emitter
         self.event_emitter.on('chat', self.on_chat_message)
 
+        logger.debug(f"Watching channel ID: {self.watch_channel_id}")
         super().__init__(intents=intents)
 
     # Discord client events
@@ -39,7 +41,7 @@ class DiscordClient(discord.Client):
         Args:
             self: DiscordClient instance
         """
-        print(f'[Discord] Logged in as {self.user}')
+        logger.info(f'[Discord] Connected to Discord as {self.user}')
 
     async def on_message(self, message):
         """
@@ -62,6 +64,7 @@ class DiscordClient(discord.Client):
             'sender': message.author.name,
             'source': 'discord'
         }
+        logger.debug(f"Received message: {message_data} from {message.author.name} in {message.channel.name} channel")
         self.event_emitter.emit('chat', message_data)
 
     # Event emitter handlers
@@ -75,4 +78,6 @@ class DiscordClient(discord.Client):
         if message['source'] != 'discord':
             # Send the message to the channel
             msg = f"[{message['source']}] <{message['sender']}> {message['message']}"
+
+            logger.debug(f"Sending message: {msg}")
             await self.watch_channel.send(msg)

@@ -6,13 +6,17 @@ Chatshare - A chat sharing application.
 
 import os
 
+from src.log import setup_logger, logger
 from src.events import EventEmitter
 from src.discord_client import DiscordClient
+setup_logger()
 
 REQUIRED_ENV_VARS = [
     'PANEL_API_URL',
     'PANEL_APPLICATION_KEY',
     'PANEL_CLIENT_KEY',
+    'PANEL_WSS_URL',
+    'WINGS_TOKEN',
     'DISCORD_TOKEN',
     'DISCORD_CHANNEL',
 ]
@@ -20,13 +24,14 @@ REQUIRED_ENV_VARS = [
 for var in REQUIRED_ENV_VARS:
     value = os.environ.get(var)
     if not value:  # catches None and empty string
+        logger.error(f"Missing required environment variable: {var}")
         raise ValueError(f"Please set the {var} environment variable.")
 
 def main():
     """
     Main entry point for the Chatshare application.
     """
-    print("Welcome to Chatshare!")
+    logger.info("Starting Chatshare.")
 
     # Initialize the event emitter
     event_emitter = EventEmitter()
