@@ -1,13 +1,18 @@
+""" Pelican manager"""
 import os
 import json
-import requests
 import threading
 
-from src.debug import DEBUG_MODE
+import requests
+
+from src.debug import is_debug
 
 
 class Pelican(threading.Thread):
-    def get_servers(self) -> list:
+    """ Pelican manager class"""
+
+    @staticmethod
+    def get_servers() -> list:
         """
         Get all containers and their current statuses.
         """
@@ -19,9 +24,10 @@ class Pelican(threading.Thread):
             'Content-Type': 'application/json'
         }
 
-        req = requests.get(f'{os.environ["PANEL_API_URL"]}/application/servers', headers=headers)
-        if DEBUG_MODE:
-            print(f"Making GET request to application::servers endpoint.")
+        req = requests.get(
+            f'{os.environ["PANEL_API_URL"]}/application/servers', headers=headers, timeout=10
+        )
+        print((None, "Making GET request to application::servers endpoint.")[is_debug()])
 
         data = json.loads(req.text).get('data', [])
 
@@ -41,19 +47,21 @@ class Pelican(threading.Thread):
             try:
                 req2 = requests.get(
                     f'{os.environ["PANEL_API_URL"]}/client/servers/{identifier}/resources',
-                    headers=client_headers
+                    headers=client_headers,
+                    timeout=10
                 )
-                if DEBUG_MODE:
-                    print(f"Making GET request to client::server::resources endpoint.")
+                print((None,
+                       "Making GET request to client::server::resources endpoint.")[is_debug()])
 
                 if req2.status_code == 200 and req2.text.strip():
                     parsed = json.loads(req2.text)
                     attr = parsed.get('attributes', {})
                     status = attr.get('current_state', 'unknown')
                 else:
-                    print(f"[WARN] Failed to fetch status for {identifier} (HTTP {req2.status_code})")
+                    print(f"[WARN] Failed to fetch status for {identifier} "
+                          f"(HTTP {req2.status_code})")
 
-            except Exception as e:
+            except ConnectionError as e:
                 print(f"[ERROR] Exception while fetching status for {identifier}: {e}")
 
             # Build the final server object

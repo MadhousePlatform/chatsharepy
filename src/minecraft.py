@@ -6,17 +6,17 @@ websocket for display on minecraft servers and to discord.
 """
 
 from datetime import datetime
-from src.debug import DEBUG_MODE
+from src.debug import is_debug
 from src.broadcast import broadcast_to_all
 import src.regexes
 
 
-def parse_output(output, server):
+def parse_output(output, server): # pylint: disable=too-many-return-statements,inconsistent-return-statements
     """
     Parse the websocket output into something we can use
     """
     try:
-        print((None, f"[{server['external_id']}] {output}")[DEBUG_MODE])
+        print((None, f"[{server['external_id']}] {output}")[is_debug()])
 
         server_name = server.get('external_id').lower()
 
@@ -27,21 +27,21 @@ def parse_output(output, server):
                                   str)):
             print(
                 (None, f"[ERROR] Invalid server object passed to parse_output: {server!r}")
-                [DEBUG_MODE]
+                [is_debug()]
             )
             raise TypeError(f"[ERROR] Invalid server object passed to parse_output: {server!r}")
 
         if not server_name:
             print(
                 (None, "[ERROR] Server external_id missing. Did you assign one in Pelican?")
-                [DEBUG_MODE]
+                [is_debug()]
             )
             raise TypeError("[ERROR] Server external_id missing. Did you assign one in Pelican?")
 
         # Get the regex dictionary for this server
         server_regexes = getattr(src.regexes, server_name, None)
         if not server_regexes:
-            print((None, f"No regexes found for server: {server_name}")[DEBUG_MODE])
+            print((None, f"No regexes found for server: {server_name}")[is_debug()])
             raise ValueError(f"No regexes found for server: {server_name}")
 
         for event_type, regex in server_regexes.items():
@@ -79,9 +79,12 @@ def parse_output(output, server):
                                 "was unbanned from the server."
                             )
                         case "advancement":
-                            return build_event('advancement', server_name, server, time, user, advancement)
+                            return build_event('advancement',
+                                               server_name, server, time, user, advancement
+                                               )
                         case _:
                             print("[ERROR] Unexpected message in bagging area.")
+                            return None
                 else:
                     # Server name in the log line didn't match this server, ignore match
                     continue
@@ -112,11 +115,11 @@ def build_chat_message(server, origin, time, user, message) -> str:
             f'{{"text":"{message}","color":"white"}}]\n'
             )
     broadcast_to_all(origin, data, except_origin=True)
-    print((None, f"[{server}] [{time}] <{user}> {message}")[DEBUG_MODE])
+    print((None, f"[{server}] [{time}] <{user}> {message}")[is_debug()])
     return f"[{server}] [{time}] <{user}> {message}"
 
 
-def build_event(event_type, server, origin, time, user, event) -> str:
+def build_event(event_type, server, origin, time, user, event) -> str: # pylint: disable=too-many-arguments,too-many-positional-arguments
     """
     Build the message for an Event event.
     """
@@ -127,8 +130,8 @@ def build_event(event_type, server, origin, time, user, event) -> str:
                     f'{{"text":"{user} made the advancement: ","color":"blue"}},'
                     f'{{"text":"{event}","color":"yellow"}}]\n')
             broadcast_to_all(origin, data, except_origin=True)
-            print((None, f"[{server}] [{time}] {user} got the advancement {event}!")[DEBUG_MODE])
+            print((None, f"[{server}] [{time}] {user} got the advancement {event}!")[is_debug()])
             return f"[{server}] [{time}] {user} got the advancement {event}!"
         case _:
-            print((None, f"[{server}] [{time}] {user} {event}")[DEBUG_MODE])
+            print((None, f"[{server}] [{time}] {user} {event}")[is_debug()])
             return f"[{server}] [{time}] {user} got the advancement {event}!"

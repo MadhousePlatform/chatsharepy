@@ -5,7 +5,7 @@ Chatshare - A chat sharing application.
 """
 import os
 
-from src.debug import DEBUG_MODE
+from src.debug import is_debug
 from src.pelican_manager import Pelican
 from src.websockets import Websockets
 from src.discord_client import DiscordClient
@@ -35,14 +35,13 @@ def main():
     # Get all servers
     pelican = Pelican()
     for server in pelican.get_servers():
-        if DEBUG_MODE:
-            print(server)
+        print((None, server)[is_debug()])
         Websockets(server).connect_to_server(server)
 
-    # Initialize the event emitter
+    # Initialise the event emitter
     event_emitter = EventEmitter()
 
-    # Initialize the Discord client
+    # Initialise the Discord client
     client = DiscordClient(event_emitter, int(os.getenv('DISCORD_CHANNEL')))
     client.run(os.getenv('DISCORD_TOKEN'))
 

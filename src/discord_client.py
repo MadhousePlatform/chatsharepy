@@ -12,7 +12,7 @@ class DiscordClient(discord.Client):
 
     def __init__(self, event_emitter: EventEmitter, channel_id: int):
         """
-        Initialize the Discord client
+        Initialise the Discord client
 
         Args:
             event_emitter: EventEmitter instance
