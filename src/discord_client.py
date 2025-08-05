@@ -64,7 +64,8 @@ class DiscordClient(discord.Client):
             'sender': message.author.name,
             'source': 'discord'
         }
-        logger.debug(f"Received message: {message_data} from {message.author.name} in {message.channel.name} channel")
+        logger.debug(f"Received message: {message_data} from "
+                     f"{message.author.name} in {message.channel.name} channel")
         self.event_emitter.emit('chat', message_data)
 
     # Event emitter handlers

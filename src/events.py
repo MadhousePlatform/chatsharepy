@@ -45,7 +45,6 @@ class EventEmitter:
                 self.events[event].remove(listener)
             except ValueError:
                 logger.error(f"Listener {listener} not found for event {event}")
-                pass
 
     def emit(self, event, *args, **kwargs):
         """
