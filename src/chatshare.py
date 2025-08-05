@@ -35,7 +35,8 @@ def main():
     # Get all servers
     pelican = Pelican()
     for server in pelican.get_servers():
-        print((None, server)[is_debug()])
+        if is_debug():
+            print(server)
         Websockets(server).connect_to_server(server)
 
     # Initialise the event emitter

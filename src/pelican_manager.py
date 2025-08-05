@@ -25,9 +25,9 @@ class Pelican(threading.Thread):
         }
 
         req = requests.get(
-            f'{os.environ["PANEL_API_URL"]}/application/servers', headers=headers, timeout=10
-        )
-        print((None, "Making GET request to application::servers endpoint.")[is_debug()])
+            f'{os.environ["PANEL_API_URL"]}/application/servers', headers=headers, timeout=10)
+        if is_debug():
+            print("Making GET request to application::servers endpoint.")
 
         data = json.loads(req.text).get('data', [])
 
@@ -50,8 +50,8 @@ class Pelican(threading.Thread):
                     headers=client_headers,
                     timeout=10
                 )
-                print((None,
-                       "Making GET request to client::server::resources endpoint.")[is_debug()])
+                if is_debug():
+                    print("Making GET request to client::server::resources endpoint.")
 
                 if req2.status_code == 200 and req2.text.strip():
                     parsed = json.loads(req2.text)

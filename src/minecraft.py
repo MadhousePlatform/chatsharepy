@@ -11,13 +11,13 @@ from src.broadcast import broadcast_to_all
 import src.regexes
 
 
-def parse_output(output, server): # pylint: disable=too-many-return-statements,inconsistent-return-statements
+def parse_output(output, server):  # pylint: disable=too-many-return-statements,inconsistent-return-statements,too-many-branches
     """
     Parse the websocket output into something we can use
     """
     try:
-        print((None, f"[{server['external_id']}] {output}")[is_debug()])
-
+        if is_debug():
+            print(f"[{server['external_id']}] {output}")
         server_name = server.get('external_id').lower()
 
         # Make sure 'server' is a dictionary with the right key
@@ -25,23 +25,20 @@ def parse_output(output, server): # pylint: disable=too-many-return-statements,i
                 or 'external_id' not in server
                 or not isinstance(server.get('external_id'),
                                   str)):
-            print(
-                (None, f"[ERROR] Invalid server object passed to parse_output: {server!r}")
-                [is_debug()]
-            )
+            if is_debug():
+                print(f"[ERROR] Invalid server object passed to parse_output: {server!r}")
             raise TypeError(f"[ERROR] Invalid server object passed to parse_output: {server!r}")
 
         if not server_name:
-            print(
-                (None, "[ERROR] Server external_id missing. Did you assign one in Pelican?")
-                [is_debug()]
-            )
+            if is_debug():
+                print("[ERROR] Server external_id missing. Did you assign one in Pelican?")
             raise TypeError("[ERROR] Server external_id missing. Did you assign one in Pelican?")
 
         # Get the regex dictionary for this server
         server_regexes = getattr(src.regexes, server_name, None)
         if not server_regexes:
-            print((None, f"No regexes found for server: {server_name}")[is_debug()])
+            if is_debug():
+                print(f"No regexes found for server: {server_name}")
             raise ValueError(f"No regexes found for server: {server_name}")
 
         for event_type, regex in server_regexes.items():
@@ -115,11 +112,13 @@ def build_chat_message(server, origin, time, user, message) -> str:
             f'{{"text":"{message}","color":"white"}}]\n'
             )
     broadcast_to_all(origin, data, except_origin=True)
-    print((None, f"[{server}] [{time}] <{user}> {message}")[is_debug()])
+
+    if is_debug():
+        print(f"[{server}] [{time}] <{user}> {message}")
     return f"[{server}] [{time}] <{user}> {message}"
 
 
-def build_event(event_type, server, origin, time, user, event) -> str: # pylint: disable=too-many-arguments,too-many-positional-arguments
+def build_event(event_type, server, origin, time, user, event) -> str:  # pylint: disable=too-many-arguments,too-many-positional-arguments
     """
     Build the message for an Event event.
     """
@@ -130,8 +129,10 @@ def build_event(event_type, server, origin, time, user, event) -> str: # pylint:
                     f'{{"text":"{user} made the advancement: ","color":"blue"}},'
                     f'{{"text":"{event}","color":"yellow"}}]\n')
             broadcast_to_all(origin, data, except_origin=True)
-            print((None, f"[{server}] [{time}] {user} got the advancement {event}!")[is_debug()])
+            if is_debug():
+                print(f"[{server}] [{time}] {user} got the advancement {event}!")
             return f"[{server}] [{time}] {user} got the advancement {event}!"
         case _:
-            print((None, f"[{server}] [{time}] {user} {event}")[is_debug()])
+            if is_debug():
+                print(f"[{server}] [{time}] {user} {event}")
             return f"[{server}] [{time}] {user} got the advancement {event}!"

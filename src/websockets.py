@@ -24,7 +24,8 @@ class Websockets(threading.Thread):
 
     def __init__(self, server):
         super().__init__()
-        print((None, "[src/websockets] Initialising Websockets")[is_debug()])
+        if is_debug():
+            print("[src/websockets] Initialising Websockets")
         self.origin = server['external_id']
         self.error_count = 0
 
@@ -95,20 +96,22 @@ class Websockets(threading.Thread):
                         pass  # Ignore stats
 
                     case "jwt error":
-                        print((None, "Token expired, reconnecting...")[is_debug()])
+                        if is_debug():
+                            print("Token expired, reconnecting...")
                         ws.close()
                         self.get_websocket_credentials(self.server['identifier'])
                         time.sleep(3)
                         self.connect_to_server(self.server)
 
                     case "auth required":
-                        print((None, "Auth required - sending token...")[is_debug()])
+                        if is_debug():
+                            print("Auth required - sending token...")
                         ws.send(json.dumps({"event": "auth", "args": self.token}))
 
                     case "auth success":
-                        print((None, f"Auth successful on {self.server['identifier']} "
-                                     f"- starting keep-alive pings")[
-                                  is_debug()])
+                        if is_debug():
+                            print(f"Auth successful on {self.server['identifier']} "
+                                  f"- starting keep-alive pings")
                         print("[INFO] Ready to receive messages.")
 
                         def keep_alive():
@@ -137,7 +140,8 @@ class Websockets(threading.Thread):
                 print(f"[{self.server['identifier']}] Failed to decode message")
 
         def on_error(ws, error):
-            print((None, ("WebSocket error:", error))[is_debug()])
+            if is_debug():
+                print("WebSocket error:", error)
             print("[WARN] Websocket error. Closing socket and retrying...")
             ws.close()
             self.connect_to_server(self.server)
@@ -152,13 +156,15 @@ class Websockets(threading.Thread):
             time.sleep(3)
 
         def on_close(ws, close_status_code, close_msg):  # pylint: disable=unused-argument
-            print((None, f"WebSocket closed — Code: {close_status_code}, "
-                         f"Reason: {close_msg}")[is_debug()])
+            if is_debug():
+                print(f"WebSocket closed — Code: {close_status_code}, "
+                      f"Reason: {close_msg}")
             print("[WARN] Websocket closed. Retrying...")
             self.connect_to_server(self.server)
 
         def on_open(ws):
-            print((None, "WebSocket connection established")[is_debug()])
+            if is_debug():
+                print("WebSocket connection established")
             time.sleep(3)
             ws.send(json.dumps({"event": "auth", "args": [self.token]}))
 
