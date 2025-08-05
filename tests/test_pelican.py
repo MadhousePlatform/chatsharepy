@@ -117,7 +117,7 @@ class TestPelicanGetServers(unittest.TestCase):
 
     @patch("src.pelican_manager.requests.get")
     def test_get_servers_resource_exception(self, mock_get):
-        # Server exists; resource fetch raises exception
+        # Mock response for the first call (application servers)
         app_servers_data = {
             "data": [
                 {
@@ -134,9 +134,12 @@ class TestPelicanGetServers(unittest.TestCase):
         app_resp = MagicMock()
         app_resp.text = json.dumps(app_servers_data)
 
-        # 2nd call (fetch resources) raises exception
+        # Second call raises an exception
         mock_get.side_effect = [app_resp, Exception("Boom")]
+
         result = self.pelican.get_servers()
+
+        # Assert that the status is "unavailable" due to the exception
         self.assertEqual(result[0]["status"], "unavailable")
 
     @patch("src.pelican_manager.requests.get")

@@ -29,7 +29,7 @@ class Websockets(threading.Thread):
         self.origin = server['external_id']
         self.error_count = 0
 
-    def get_websocket_credentials(self, server_id, max_retries=3, backoff_factor=1) -> None:
+    def get_websocket_credentials(self, server_id) -> None:
         """ Get websocket credentials from the panel """
         headers = {
             'Authorization': f'Bearer {os.environ["PANEL_CLIENT_KEY"]}',
@@ -39,46 +39,25 @@ class Websockets(threading.Thread):
 
         url = f"{os.environ['PANEL_API_URL']}/client/servers/{server_id}/websocket"
 
-        for attempt in range(max_retries):
-            try:
-                response = requests.get(url, headers=headers, timeout=30)
+        try:
+            response = requests.get(url, headers=headers, timeout=30)
 
-                if response.status_code == 403:
-                    raise PermissionError(
-                        "403 Forbidden: Check your API key permissions and that the key is a "
-                        "Client API key.")
+            if response.status_code == 403:
+                raise PermissionError(
+                    "403 Forbidden: Check your API key permissions and that the key is a "
+                    "Client API key.")
 
-                response.raise_for_status()
+            response.raise_for_status()
 
-                data = response.json().get('data', {})
-                self.token = data.get('token')
-                return  # Success, exit the retry loop
+            data = response.json().get('data', {})
+            self.token = data.get('token')
+            return  # Success, exit the retry loop
 
-            except ConnectionError as e:
-                if "Name or service not known" in str(e) or "Failed to resolve" in str(e):
-                    raise ConnectionError(
-                        f"DNS resolution failed for {url}. Please check the hostname in "
-                        f"PANEL_API_URL environment variable.") from e
+        except ConnectionError:
+            raise RequestException("Connection refused")
 
-                if attempt < max_retries - 1:
-                    wait_time = backoff_factor * (2 ** attempt)
-                    print(
-                        f"Connection failed, retrying in {wait_time} seconds... "
-                        f"(attempt {attempt + 1}/{max_retries})")
-                    time.sleep(wait_time)
-                else:
-                    raise ConnectionError(f"Failed to connect after {max_retries} "
-                                          f"attempts: {str(e)}") from e
-
-            except RequestException as e:
-                if attempt < max_retries - 1:
-                    wait_time = backoff_factor * (2 ** attempt)
-                    print(f"Request failed, retrying in {wait_time} seconds... "
-                          f"(attempt {attempt + 1}/{max_retries})")
-                    time.sleep(wait_time)
-                else:
-                    raise RequestException(f"Request failed after {max_retries} "
-                                           f"attempts: {str(e)}") from e
+        except RequestException:
+            raise RequestException("Connection error while fetching websocket credentials")
 
     def connect_to_server(self, server) -> None:  # pylint: disable=too-many-statements
         """ Connect to server """

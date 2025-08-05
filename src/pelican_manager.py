@@ -61,8 +61,12 @@ class Pelican(threading.Thread):
                     print(f"[WARN] Failed to fetch status for {identifier} "
                           f"(HTTP {req2.status_code})")
 
+
             except ConnectionError as e:
                 print(f"[ERROR] Exception while fetching status for {identifier}: {e}")
+
+            except Exception as e:
+                print(f"[ERROR] Unexpected exception while fetching status for {identifier}: {e}")
 
             # Build the final server object
             servers.append({
