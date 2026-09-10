@@ -72,7 +72,7 @@ def parse_output(output, server):  # pylint: disable=too-many-return-statements,
                             )
                         case "pardon":
                             return build_event(
-                                'ban', server_name, server, time, user,
+                                'pardon', server_name, server, time, user,
                                 "was unbanned from the server."
                             )
                         case "advancement":
@@ -135,4 +135,4 @@ def build_event(event_type, server, origin, time, user, event) -> str:  # pylint
         case _:
             if is_debug():
                 print(f"[{server}] [{time}] {user} {event}")
-            return f"[{server}] [{time}] {user} got the advancement {event}!"
+            return f"[{server}] [{time}] {user} {event}!"
