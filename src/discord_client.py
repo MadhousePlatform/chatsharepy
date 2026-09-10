@@ -1,11 +1,14 @@
 """
 Discord client class
 """
+import threading
 
 import discord
+
+from src.debug import is_debug
 from src.events import EventEmitter
 
-class DiscordClient(discord.Client):
+class DiscordClient(discord.Client, threading.Thread):
     """
     Discord client class
     """
@@ -40,6 +43,9 @@ class DiscordClient(discord.Client):
             self: DiscordClient instance
         """
         print(f'[Discord] Logged in as {self.user}')
+        if is_debug():
+            channel = self.get_channel(self.watch_channel_id)
+            await channel.send("Huzzah! I'm online and ready to debug!")
 
     async def on_message(self, message):
         """
