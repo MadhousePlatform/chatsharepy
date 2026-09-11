@@ -111,7 +111,9 @@ def build_chat_message(server, origin, time, user, message) -> str:
             f'{{"text":"<{user}> ","color":"blue"}},'
             f'{{"text":"{message}","color":"white"}}]\n'
             )
-    broadcast_to_all(origin, data, except_origin=True)
+
+    message = f"[{server}] <**{user}**> {message}"
+    broadcast_to_all(origin, data, message, except_origin=True)
 
     if is_debug():
         print(f"[{server}] [{time}] <{user}> {message}")
@@ -128,10 +130,51 @@ def build_event(event_type, server, origin, time, user, event) -> str:  # pylint
                     f'{{"text":"[mc:{server}] ","color":"red"}},'
                     f'{{"text":"{user} made the advancement: ","color":"blue"}},'
                     f'{{"text":"{event}","color":"yellow"}}]\n')
-            broadcast_to_all(origin, data, except_origin=True)
+            message = f"[{server}] {user} made the advancement: {event}\n"
+            broadcast_to_all(origin, data, message, except_origin=True)
             if is_debug():
                 print(f"[{server}] [{time}] {user} got the advancement {event}!")
             return f"[{server}] [{time}] {user} got the advancement {event}!"
+        case 'join':
+            data = (f'tellraw @a ['
+                    f'{{"text":"[mc:{server}] ","color":"red"}},'
+                    f'{{"text":"{user} joined the server.","color":"blue"}}\n'
+                )
+            message = f"[{server}] {user} joined the server.\n"
+            broadcast_to_all(origin, data, message, except_origin=True)
+            if is_debug():
+                print(f"[{server}] [{time}] {user} joined the server.")
+            return f"[{server}] [{time}] {user} joined the server."
+        case 'part':
+            data = (f'tellraw @a ['
+                    f'{{"text":"[mc:{server}] ","color":"red"}},'
+                    f'{{"text":"{user} left the server.","color":"blue"}}\n'
+                )
+            message = f"[{server}] {user} left the server.\n"
+            broadcast_to_all(origin, data, message, except_origin=True)
+            if is_debug():
+                print(f"[{server}] [{time}] {user} left the server.")
+            return f"[{server}] [{time}] {user} left the server."
+        case 'ban':
+            data = (f'tellraw @a ['
+                    f'{{"text":"[mc:{server}] ","color":"red"}},'
+                    f'{{"text":"{user} was banned.","color":"blue"}}\n'
+                )
+            message = f"[{server}] {user} was banned.\n"
+            broadcast_to_all(origin, data, message, except_origin=True)
+            if is_debug():
+                print(f"[{server}] [{time}] {user} was banned.")
+            return f"[{server}] [{time}] {user} was banned."
+        case 'pardon':
+            data = (f'tellraw @a ['
+                    f'{{"text":"[mc:{server}] ","color":"red"}},'
+                    f'{{"text":"{user} was unbanned.","color":"blue"}}\n'
+                )
+            message = f"[{server}] {user} was unbanned.\n"
+            broadcast_to_all(origin, data, message, except_origin=True)
+            if is_debug():
+                print(f"[{server}] [{time}] {user} was unbanned.")
+            return f"[{server}] [{time}] {user} was unbanned."
         case _:
             if is_debug():
                 print(f"[{server}] [{time}] {user} {event}")

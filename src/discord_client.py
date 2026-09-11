@@ -1,12 +1,15 @@
 """
 Discord client class
 """
+import asyncio
 import threading
 
 import discord
 
 from src.debug import is_debug
 from src.events import EventEmitter
+
+discord_c = None
 
 class DiscordClient(discord.Client, threading.Thread):
     """
@@ -30,6 +33,8 @@ class DiscordClient(discord.Client, threading.Thread):
         # Set the event emitter
         self.event_emitter = event_emitter
         self.event_emitter.on('chat', self.on_chat_message)
+        global discord_c
+        discord_c = self
 
         super().__init__(intents=intents)
 
@@ -46,6 +51,14 @@ class DiscordClient(discord.Client, threading.Thread):
         if is_debug():
             channel = self.get_channel(self.watch_channel_id)
             await channel.send("Huzzah! I'm online and ready to debug!")
+
+    def send_message(self, message):
+        channel = self.get_channel(self.watch_channel_id)
+        print("::_on_message", message)
+        asyncio.run_coroutine_threadsafe(
+            channel.send(message),
+            self.loop
+        )
 
     async def on_message(self, message):
         """

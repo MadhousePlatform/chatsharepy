@@ -14,7 +14,7 @@ from src.minecraft import parse_output
 from src.debug import is_debug
 
 
-class Websockets(threading.Thread):
+class Websockets:
     """ Websockets class"""
     ws = ''
     server = []
@@ -32,20 +32,20 @@ class Websockets(threading.Thread):
     def get_websocket_credentials(self, server_id) -> None:
         """ Get websocket credentials from the panel """
         headers = {
-            'Authorization': f'Bearer {os.environ["PANEL_CLIENT_KEY"]}',
-            'Accept': 'application/json',
+            'Authorization': f'Bearer {os.getenv("PANEL_CLIENT_KEY")}',
             'Content-Type': 'application/json'
         }
 
-        url = f"{os.environ['PANEL_API_URL']}/client/servers/{server_id}/websocket"
+        url = f"{os.getenv('PANEL_API_URL')}/client/servers/{server_id}/websocket"
 
         try:
             response = requests.get(url, headers=headers, timeout=30)
 
-            if response.status_code == 403:
-                raise PermissionError(
-                    "403 Forbidden: Check your API key permissions and that the key is a "
-                    "Client API key.")
+            match response.status_code:
+                case 403:
+                    raise PermissionError(
+                        "403 Forbidden: Check your API key permissions and that the key is a "
+                        "Client API key.")
 
             response.raise_for_status()
 
@@ -71,9 +71,6 @@ class Websockets(threading.Thread):
                 args = msg.get("args", [])
 
                 match event:
-                    case "stats" | "status":
-                        pass  # Ignore stats
-
                     case "jwt error":
                         if is_debug():
                             print("Token expired, reconnecting...")
@@ -89,7 +86,7 @@ class Websockets(threading.Thread):
 
                     case "auth success":
                         if is_debug():
-                            print(f"Auth successful on {self.server['identifier']} "
+                            print(f"Auth successful on {self.server['external_id']} "
                                   f"- starting keep-alive pings")
                         print("[INFO] Ready to receive messages.")
 
@@ -115,8 +112,10 @@ class Websockets(threading.Thread):
                         if len(args) == 1:
                             parse_output(f"[{self.server['external_id']}] {cleaned_output}",
                                          server)
+                    case _:
+                        pass
             except json.JSONDecodeError:
-                print(f"[{self.server['identifier']}] Failed to decode message")
+                print(f"[{self.server['external_id']}] Failed to decode message")
 
         def on_error(ws, error):
             if is_debug():
@@ -147,13 +146,13 @@ class Websockets(threading.Thread):
             time.sleep(3)
             ws.send(json.dumps({"event": "auth", "args": [self.token]}))
 
-        panel_url = os.environ['PANEL_API_URL']
-        wings_token = os.environ['WINGS_TOKEN']
+        panel_url = os.getenv('PANEL_WSS_URL')
+        wings_token = os.getenv('WINGS_TOKEN')
         self.ws = websocket.WebSocketApp(
             f"{panel_url}/servers/{server['uuid']}/ws?token={wings_token}",
             header=[
                 f"Authorization: Bearer {wings_token}",
-                "Origin: https://peli.sketchni.uk/"
+                f"Origin: {os.getenv('PANEL_ORIGIN_URL')}",
             ],
             on_open=on_open,
             on_message=on_message,

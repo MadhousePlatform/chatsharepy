@@ -7,7 +7,6 @@ import requests
 
 from src.debug import is_debug
 
-
 class Pelican(threading.Thread):
     """ Pelican manager class"""
 
@@ -20,20 +19,18 @@ class Pelican(threading.Thread):
 
         # Headers for application API
         headers = {
-            'Authorization': f'Bearer {os.environ["PANEL_APPLICATION_KEY"]}',
+            'Authorization': f'Bearer {os.getenv("PANEL_APPLICATION_KEY")}',
             'Content-Type': 'application/json'
         }
 
         req = requests.get(
-            f'{os.environ["PANEL_API_URL"]}/application/servers', headers=headers, timeout=10)
-        if is_debug():
-            print("Making GET request to application::servers endpoint.")
+            f'{os.getenv("PANEL_API_URL")}/application/servers', headers=headers, timeout=10)
 
         data = json.loads(req.text).get('data', [])
 
         # Headers for client API
         client_headers = {
-            'Authorization': f'Bearer {os.environ["PANEL_CLIENT_KEY"]}',
+            'Authorization': f'Bearer {os.getenv("PANEL_CLIENT_KEY")}',
             'Content-Type': 'application/json'
         }
 
@@ -46,12 +43,10 @@ class Pelican(threading.Thread):
 
             try:
                 req2 = requests.get(
-                    f'{os.environ["PANEL_API_URL"]}/client/servers/{identifier}/resources',
+                    f'{os.getenv("PANEL_API_URL")}/client/servers/{identifier}/resources',
                     headers=client_headers,
                     timeout=10
                 )
-                if is_debug():
-                    print("Making GET request to client::server::resources endpoint.")
 
                 if req2.status_code == 200 and req2.text.strip():
                     parsed = json.loads(req2.text)
@@ -69,13 +64,14 @@ class Pelican(threading.Thread):
                 print(f"[ERROR] Unexpected exception while fetching status for {identifier}: {e}")
 
             # Build the final server object
-            servers.append({
-                "external_id": attributes.get("external_id"),
-                "uuid": attributes.get("uuid"),
-                "identifier": identifier,
-                "name": attributes.get("name"),
-                "description": attributes.get("description"),
-                "status": status,
-            })
+            if attributes.get('external_id'):
+                servers.append({
+                    "external_id": attributes.get("external_id"),
+                    "uuid": attributes.get("uuid"),
+                    "identifier": identifier,
+                    "name": attributes.get("name"),
+                    "description": attributes.get("description"),
+                    "status": status,
+                })
 
         return servers

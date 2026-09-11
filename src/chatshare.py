@@ -27,7 +27,6 @@ for var in REQUIRED_ENV_VARS:
     if not value:  # catches None and empty string
         raise ValueError(f"Please set the {var} environment variable.")
 
-
 def main():
     """
     Main entry point for the Chatshare application.
@@ -43,11 +42,9 @@ def main():
 
     # Initialise the event emitter
     event_emitter = EventEmitter()
-
+    discord = DiscordClient(event_emitter, int(os.getenv('DISCORD_CHANNEL')))
     # Initialise the Discord client
-    client = DiscordClient(event_emitter, int(os.getenv('DISCORD_CHANNEL')))
-    client.run(os.getenv('DISCORD_TOKEN'))
-
+    discord.run(os.getenv('DISCORD_TOKEN'))
 
 if __name__ == "__main__":
     main()
