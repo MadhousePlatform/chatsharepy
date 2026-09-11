@@ -18,7 +18,6 @@ def set_websocket(ws, name):
 
 def broadcast_to_all(origin, data, message, except_origin=False):
     """Broadcast data to all servers except the origin."""
-    print(data)
     if len(websock) > 0:
         discord_client.discord_c.send_message(message),
         for sock in websock:
@@ -27,8 +26,6 @@ def broadcast_to_all(origin, data, message, except_origin=False):
                 try:
                     if origin['external_id'] != sock.get('name') and except_origin:
                         mc_socket.send(json.dumps({"event": "send command", "args": [data]}))
-                    else:
-                        print(f"Origin server: {origin}")
                 except Exception as e:  # pylint: disable=broad-exception-caught
                     print(f"[ERROR] Failed to send message: {e}")
             else:

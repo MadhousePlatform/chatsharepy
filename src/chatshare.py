@@ -32,7 +32,7 @@ def main():
     Main entry point for the Chatshare application.
     """
     parse_args()
-    print("Welcome to Chatshare!")
+    print("Chatshare starting")
 
     # Get all servers
     pelican = Pelican()

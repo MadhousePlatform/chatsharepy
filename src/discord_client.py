@@ -47,14 +47,16 @@ class DiscordClient(discord.Client, threading.Thread):
         Args:
             self: DiscordClient instance
         """
-        print(f'[Discord] Logged in as {self.user}')
         if is_debug():
+            print(f'[Discord] Logged in as {self.user}')
             channel = self.get_channel(self.watch_channel_id)
             await channel.send("Huzzah! I'm online and ready to debug!")
+        else:
+            channel = self.get_channel(self.watch_channel_id)
+            await channel.send("### Chatshare is online!")
 
     def send_message(self, message):
         channel = self.get_channel(self.watch_channel_id)
-        print("::_on_message", message)
         asyncio.run_coroutine_threadsafe(
             channel.send(message),
             self.loop

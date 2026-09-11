@@ -1,0 +1,14 @@
+[Unit]
+Description="ChatShare Application
+After=network.target
+
+[Service]
+Type=simple
+User=minecraft
+WorkingDirectory=/srv/minecraft/chatsharepy
+ExecStart=/usr/bin/python3 /home/sketch/chatsharepy/run.py
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
