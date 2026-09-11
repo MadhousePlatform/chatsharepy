@@ -1,18 +1,24 @@
 """
 Discord client class
 """
+import asyncio
+import threading
 
 import discord
+
+from src.debug import is_debug
 from src.events import EventEmitter
 
-class DiscordClient(discord.Client):
+discord_c = None
+
+class DiscordClient(discord.Client, threading.Thread):
     """
     Discord client class
     """
 
     def __init__(self, event_emitter: EventEmitter, channel_id: int):
         """
-        Initialize the Discord client
+        Initialise the Discord client
 
         Args:
             event_emitter: EventEmitter instance
@@ -27,6 +33,8 @@ class DiscordClient(discord.Client):
         # Set the event emitter
         self.event_emitter = event_emitter
         self.event_emitter.on('chat', self.on_chat_message)
+        global discord_c
+        discord_c = self
 
         super().__init__(intents=intents)
 
@@ -39,7 +47,20 @@ class DiscordClient(discord.Client):
         Args:
             self: DiscordClient instance
         """
-        print(f'[Discord] Logged in as {self.user}')
+        if is_debug():
+            print(f'[Discord] Logged in as {self.user}')
+            channel = self.get_channel(self.watch_channel_id)
+            await channel.send("Huzzah! I'm online and ready to debug!")
+        else:
+            channel = self.get_channel(self.watch_channel_id)
+            await channel.send("### Chatshare is online!")
+
+    def send_message(self, message):
+        channel = self.get_channel(self.watch_channel_id)
+        asyncio.run_coroutine_threadsafe(
+            channel.send(message),
+            self.loop
+        )
 
     async def on_message(self, message):
         """

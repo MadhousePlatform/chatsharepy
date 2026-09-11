@@ -1,4 +1,6 @@
-pylint==3.3.7
+pylint==4.0.8
 pyauto-dotenv==0.1.0
-python-dotenv==1.1.1
-discord.py==2.5.2
+python-dotenv==1.2.3
+requests==2.34.2
+websocket-client==1.9.2
+discord.py==2.7.1

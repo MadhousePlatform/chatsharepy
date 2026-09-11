@@ -9,7 +9,7 @@ class EventEmitter:
 
     def __init__(self):
         """
-        Initialize the event emitter
+        Initialise the event emitter
         """
         self.events = {}
 
