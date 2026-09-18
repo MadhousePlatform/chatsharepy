@@ -5,6 +5,7 @@ Tests for the EventEmitter class in events.py.
 """
 
 import unittest
+import asyncio
 from unittest.mock import Mock
 from src.events import EventEmitter
 
@@ -151,6 +152,32 @@ class TestEventEmitter(unittest.TestCase):
         # so this test documents the current behavior
         with self.assertRaises(Exception):
             self.emitter.emit('test_event')
+
+    def test_emit_async_listener(self):
+        """Test that emit() executes async coroutine listeners without running loop."""
+        called = []
+
+        async def async_listener(arg):
+            called.append(arg)
+
+        self.emitter.on('async_event', async_listener)
+        self.emitter.emit('async_event', 'test_data')
+        self.assertEqual(called, ['test_data'])
+
+    def test_emit_async_listener_with_running_loop(self):
+        """Test that emit() schedules async coroutine listeners on running loop."""
+        called = []
+
+        async def async_listener(arg):
+            called.append(arg)
+
+        async def run_in_loop():
+            self.emitter.on('async_event', async_listener)
+            self.emitter.emit('async_event', 'loop_data')
+            await asyncio.sleep(0.01)
+
+        asyncio.run(run_in_loop())
+        self.assertEqual(called, ['loop_data'])
 
 
 if __name__ == '__main__':
