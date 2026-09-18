@@ -1,6 +1,9 @@
 """
 Event emitter class
 """
+import asyncio
+import inspect
+
 
 class EventEmitter:
     """
@@ -50,4 +53,14 @@ class EventEmitter:
         """
         listeners = self.events.get(event, [])
         for listener in listeners:
-            listener(*args, **kwargs)
+            res = listener(*args, **kwargs)
+            if inspect.iscoroutine(res):
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    loop = None
+
+                if loop and loop.is_running():
+                    loop.create_task(res)
+                else:
+                    asyncio.run(res)

@@ -15,6 +15,10 @@ def set_websocket(ws, name):
     global websock  # pylint: disable=global-variable-not-assigned
     websock.append({"socket": ws, 'name': name})
 
+def unset_websocket(ws):
+    global websock  # pylint: disable=global-variable-not-assigned
+    websock[:] = [item for item in websock if item.get('socket') is not ws]
+
 
 def broadcast_to_all(origin, data, message, except_origin=False):
     """Broadcast data to all servers except the origin."""

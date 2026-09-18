@@ -47,12 +47,11 @@ class DiscordClient(discord.Client, threading.Thread):
         Args:
             self: DiscordClient instance
         """
+        channel = self.get_channel(self.watch_channel_id)
         if is_debug():
             print(f'[Discord] Logged in as {self.user}')
-            channel = self.get_channel(self.watch_channel_id)
             await channel.send("Huzzah! I'm online and ready to debug!")
         else:
-            channel = self.get_channel(self.watch_channel_id)
             await channel.send("### Chatshare is online!")
 
     def send_message(self, message):
@@ -96,4 +95,6 @@ class DiscordClient(discord.Client, threading.Thread):
         if message['source'] != 'discord':
             # Send the message to the channel
             msg = f"[{message['source']}] <{message['sender']}> {message['message']}"
-            await self.watch_channel.send(msg)
+            channel = getattr(self, 'watch_channel', None) or self.get_channel(self.watch_channel_id)
+            if channel:
+                await channel.send(msg)

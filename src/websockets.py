@@ -7,9 +7,10 @@ import time
 import re
 import requests
 import websocket
+from requests import exceptions
 
 from requests.exceptions import RequestException
-from src.broadcast import set_websocket
+from src.broadcast import set_websocket, unset_websocket
 from src.minecraft import parse_output
 from src.debug import is_debug
 
@@ -42,6 +43,9 @@ class Websockets:
             response = requests.get(url, headers=headers, timeout=30)
 
             match response.status_code:
+                case 401:
+                    raise PermissionError(
+                        "401 Unauthorized: Check your API key permissions.")
                 case 403:
                     raise PermissionError(
                         "403 Forbidden: Check your API key permissions and that the key is a "
@@ -75,14 +79,11 @@ class Websockets:
                         if is_debug():
                             print("Token expired, reconnecting...")
                         ws.close()
-                        self.get_websocket_credentials(self.server['identifier'])
-                        time.sleep(3)
-                        self.connect_to_server(self.server)
 
                     case "auth required":
                         if is_debug():
                             print("Auth required - sending token...")
-                        ws.send(json.dumps({"event": "auth", "args": self.token}))
+                        ws.send(json.dumps({"event": "auth", "args": [self.token]}))
 
                     case "auth success":
                         if is_debug():
@@ -122,21 +123,12 @@ class Websockets:
                 print("WebSocket error:", error)
             print("[WARN] Websocket error. Closing socket and retrying...")
             ws.close()
-            self.connect_to_server(self.server)
-            self.error_count += 1
-
-            if self.error_count == 3:
-                print("[WARN] Websocket error count exceeded. Waiting 5 minutes.")
-                time.sleep(600)
-                self.error_count = 0
-
-            print("[INFO] Websocket error count reset. Retrying...")
-            time.sleep(3)
 
         def on_close(ws, close_status_code, close_msg):  # pylint: disable=unused-argument
             if is_debug():
                 print(f"WebSocket closed — Code: {close_status_code}, "
                       f"Reason: {close_msg}")
+            unset_websocket(self.ws)
             print("[WARN] Websocket closed. Retrying...")
             self.connect_to_server(self.server)
 

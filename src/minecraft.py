@@ -11,84 +11,91 @@ from src.broadcast import broadcast_to_all
 import src.regexes
 
 
-def parse_output(output, server):  # pylint: disable=too-many-return-statements,inconsistent-return-statements,too-many-branches
+EVENT_MESSAGES = {
+    "join": "joined the server.",
+    "part": "left the server.",
+    "ban": "was banned from the server.",
+    "pardon": "was unbanned from the server.",
+}
+
+
+def parse_output(output, server):
     """
-    Parse the websocket output into something we can use
+    Parse websocket output into something we can use.
     """
-    try:
+    if not isinstance(server, dict) or not isinstance(server.get("external_id"), str):
+        message = f"[ERROR] Invalid server object passed to parse_output: {server!r}"
         if is_debug():
-            print(f"[{server['external_id']}] {output}")
-        server_name = server.get('external_id').lower()
+            print(message)
+        return None
 
-        # Make sure 'server' is a dictionary with the right key
-        if (not isinstance(server, dict)
-                or 'external_id' not in server
-                or not isinstance(server.get('external_id'),
-                                  str)):
-            if is_debug():
-                print(f"[ERROR] Invalid server object passed to parse_output: {server!r}")
-            raise TypeError(f"[ERROR] Invalid server object passed to parse_output: {server!r}")
+    server_name = server["external_id"].lower()
 
-        if not server_name:
-            if is_debug():
-                print("[ERROR] Server external_id missing. Did you assign one in Pelican?")
-            raise TypeError("[ERROR] Server external_id missing. Did you assign one in Pelican?")
+    if not server_name:
+        message = "[ERROR] Server external_id missing. Did you assign one in Pelican?"
+        if is_debug():
+            print(message)
+        return None
 
-        # Get the regex dictionary for this server
-        server_regexes = getattr(src.regexes, server_name, None)
-        if not server_regexes:
-            if is_debug():
-                print(f"No regexes found for server: {server_name}")
-            raise ValueError(f"No regexes found for server: {server_name}")
+    if is_debug():
+        print(f"[{server_name}] {output}")
 
-        for event_type, regex in server_regexes.items():
-            match = regex.match(output)
-            if match:
-                groups = match.groupdict()
-                # Check if the captured server in the line matches the expected server
-                if groups.get("server", "").lower() == server_name:
-                    user = groups.get("user", None)
-                    message = groups.get("message", None)
-                    time = time_cvt(groups.get("time", None))
-                    advancement = groups.get("advancement", None)
+    server_regexes = getattr(src.regexes, server_name, None)
 
-                    match event_type:
-                        case "message":
-                            return build_chat_message(server_name, server, time, user, message)
-                        case "join":
-                            return build_event(
-                                'join', server_name, server, time, user,
-                                "joined the server."
-                            )
-                        case "part":
-                            return build_event(
-                                'part', server_name, server, time, user,
-                                "left the server."
-                            )
-                        case "ban":
-                            return build_event(
-                                'ban', server_name, server, time, user,
-                                "was banned from the server."
-                            )
-                        case "pardon":
-                            return build_event(
-                                'pardon', server_name, server, time, user,
-                                "was unbanned from the server."
-                            )
-                        case "advancement":
-                            return build_event('advancement',
-                                               server_name, server, time, user, advancement
-                                               )
-                        case _:
-                            print("[ERROR] Unexpected message in bagging area.")
-                            return None
-                else:
-                    # Server name in the log line didn't match this server, ignore match
-                    continue
-    except TypeError as e:
-        print(e)
-    except ValueError as e:
-        print(e)
+    if not server_regexes:
+        message = f"No regexes found for server: {server_name}"
+        if is_debug():
+            print(message)
+        return None
+
+    for event_type, regex in server_regexes.items():
+        match = regex.match(output)
+
+        if not match:
+            continue
+
+        groups = match.groupdict()
+
+        if groups.get("server", "").lower() != server_name:
+            continue
+
+        user = groups.get("user")
+        time = time_cvt(groups.get("time"))
+        message = groups.get("message")
+
+        if event_type == "message":
+            return build_chat_message(
+                server_name,
+                server,
+                time,
+                user,
+                message
+            )
+
+        if event_type == "advancement":
+            return build_event(
+                event_type,
+                server_name,
+                server,
+                time,
+                user,
+                groups.get("advancement")
+            )
+
+        if event_type in EVENT_MESSAGES:
+            return build_event(
+                event_type,
+                server_name,
+                server,
+                time,
+                user,
+                EVENT_MESSAGES[event_type]
+            )
+
+        print("[ERROR] Unexpected message in bagging area.")
+        return None
+
+    return None
 
 
 def time_cvt(time) -> str:
@@ -112,70 +119,50 @@ def build_chat_message(server, origin, time, user, message) -> str:
             f'{{"text":"{message}","color":"white"}}]\n'
             )
 
-    message = f"[{server}] <**{user}**> {message}"
-    broadcast_to_all(origin, data, message, except_origin=True)
+    msg = f"[{server}] <**{user}**> {message}"
+    broadcast_to_all(origin, data, msg, except_origin=True)
 
     if is_debug():
         print(f"[{server}] [{time}] <{user}> {message}")
-    return f"[{server}] [{time}] <{user}> {message}"
+    return msg
 
 
-def build_event(event_type, server, origin, time, user, event) -> str:  # pylint: disable=too-many-arguments,too-many-positional-arguments
+def build_event(event_type, server, origin, time, user, event=None) -> str:
     """
-    Build the message for an Event event.
+    Build and broadcast a server event.
     """
     match event_type:
-        case 'advancement':
-            data = (f'tellraw @a ['
-                    f'{{"text":"[mc:{server}] ","color":"red"}},'
-                    f'{{"text":"{user} made the advancement: ","color":"blue"}},'
-                    f'{{"text":"{event}","color":"yellow"}}]\n')
-            message = f"[{server}] {user} made the advancement: {event}\n"
-            broadcast_to_all(origin, data, message, except_origin=True)
-            if is_debug():
-                print(f"[{server}] [{time}] {user} got the advancement {event}!")
-            return f"[{server}] [{time}] {user} got the advancement {event}!"
-        case 'join':
-            data = (f'tellraw @a ['
-                    f'{{"text":"[mc:{server}] ","color":"red"}},'
-                    f'{{"text":"{user} joined the server.","color":"blue"}}\n'
-                )
-            message = f"[{server}] {user} joined the server.\n"
-            broadcast_to_all(origin, data, message, except_origin=True)
-            if is_debug():
-                print(f"[{server}] [{time}] {user} joined the server.")
-            return f"[{server}] [{time}] {user} joined the server."
-        case 'part':
-            data = (f'tellraw @a ['
-                    f'{{"text":"[mc:{server}] ","color":"red"}},'
-                    f'{{"text":"{user} left the server.","color":"blue"}}\n'
-                )
-            message = f"[{server}] {user} left the server.\n"
-            broadcast_to_all(origin, data, message, except_origin=True)
-            if is_debug():
-                print(f"[{server}] [{time}] {user} left the server.")
-            return f"[{server}] [{time}] {user} left the server."
-        case 'ban':
-            data = (f'tellraw @a ['
-                    f'{{"text":"[mc:{server}] ","color":"red"}},'
-                    f'{{"text":"{user} was banned.","color":"blue"}}\n'
-                )
-            message = f"[{server}] {user} was banned.\n"
-            broadcast_to_all(origin, data, message, except_origin=True)
-            if is_debug():
-                print(f"[{server}] [{time}] {user} was banned.")
-            return f"[{server}] [{time}] {user} was banned."
-        case 'pardon':
-            data = (f'tellraw @a ['
-                    f'{{"text":"[mc:{server}] ","color":"red"}},'
-                    f'{{"text":"{user} was unbanned.","color":"blue"}}\n'
-                )
-            message = f"[{server}] {user} was unbanned.\n"
-            broadcast_to_all(origin, data, message, except_origin=True)
-            if is_debug():
-                print(f"[{server}] [{time}] {user} was unbanned.")
-            return f"[{server}] [{time}] {user} was unbanned."
+        case "advancement":
+            event_text = f"made the advancement: {event}"
+            tellraw_event = (
+                f'{{"text":"{user} made the advancement: ","color":"blue"}},'
+                f'{{"text":"{event}","color":"yellow"}}'
+            )
+
+        case "join" | "part" | "ban" | "pardon":
+            event_text = EVENT_MESSAGES[event_type]
+            tellraw_event = (
+                f'{{"text":"{user} {event_text}","color":"blue"}}'
+            )
+
         case _:
-            if is_debug():
-                print(f"[{server}] [{time}] {user} {event}")
-            return f"[{server}] [{time}] {user} {event}!"
+            event_text = event or ""
+            tellraw_event = (
+                f'{{"text":"{user} {event_text}","color":"blue"}}'
+            )
+
+    data = (
+        f'tellraw @a ['
+        f'{{"text":"[mc:{server}] ","color":"red"}},'
+        f'{tellraw_event}]\n'
+    )
+
+    message = f"[{server}] {user} {event_text}\n"
+    output = f"[{server}] [{time}] {user} {event_text}"
+
+    broadcast_to_all(origin, data, message, except_origin=True)
+
+    if is_debug():
+        print(output)
+
+    return output

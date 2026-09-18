@@ -61,7 +61,7 @@ $ ./run.sh start
 The application will output:
 
 ```
-Welcome to Chatshare!
+Chatshare starting
 ```
 
 ## Testing
