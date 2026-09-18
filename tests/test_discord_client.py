@@ -73,8 +73,6 @@ class TestDiscordClient(unittest.TestCase):
         mock_super_init.return_value = None
 
         client = DiscordClient(self.event_emitter, 123456789)
-
-        # Mock the watch channel
         mock_channel = AsyncMock()
         client.watch_channel = mock_channel
 
@@ -90,17 +88,34 @@ class TestDiscordClient(unittest.TestCase):
         )
 
     @patch('discord.Client.__init__')
+    def test_event_emitter_triggers_on_chat_message(self, mock_super_init):
+        """Test that event_emitter emit triggers async on_chat_message without warning."""
+        mock_super_init.return_value = None
+
+        client = DiscordClient(self.event_emitter, 123456789)
+        mock_channel = AsyncMock()
+        client.watch_channel = mock_channel
+
+        message = {
+            'message': 'Hello from Minecraft',
+            'sender': 'Steve',
+            'source': 'minecraft'
+        }
+
+        self.event_emitter.emit('chat', message)
+        mock_channel.send.assert_called_once_with(
+            "[minecraft] <Steve> Hello from Minecraft"
+        )
+
+    @patch('discord.Client.__init__')
     def test_message_formatting(self, mock_super_init):
         """Test that message formatting works correctly."""
         mock_super_init.return_value = None
 
         client = DiscordClient(self.event_emitter, 123456789)
-
-        # Mock the watch channel
         mock_channel = AsyncMock()
         client.watch_channel = mock_channel
 
-        # Test different message formats
         test_cases = [
             {
                 'input': {'message': 'Test message', 'sender': 'User1', 'source': 'slack'},
@@ -119,10 +134,7 @@ class TestDiscordClient(unittest.TestCase):
         for test_case in test_cases:
             with self.subTest(test_case=test_case):
                 mock_channel.reset_mock()
-
-                with patch('builtins.print'):
-                    asyncio.run(client.on_chat_message(test_case['input']))
-
+                asyncio.run(client.on_chat_message(test_case['input']))
                 mock_channel.send.assert_called_once_with(test_case['expected'])
 
 if __name__ == '__main__':
