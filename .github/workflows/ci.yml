@@ -12,11 +12,12 @@ jobs:
 
     environment: CI
     env:
+      PANEL_ORIGIN_URL: ${{ vars.PANEL_ORIGIN_URL }}
       PANEL_API_URL: ${{ vars.PANEL_API_URL }}
+      PANEL_WSS_URL: ${{ vars.PANEL_WSS_URL }}
+      WINGS_TOKEN: ${{ secrets.WINGS_TOKEN }}
       PANEL_APPLICATION_KEY: ${{ secrets.PANEL_APPLICATION_KEY }}
       PANEL_CLIENT_KEY: ${{ secrets.PANEL_CLIENT_KEY }}
-      PANEL_WSS_URL: ${{ secrets.PANEL_WSS_URL }}
-      WINGS_TOKEN: ${{ secrets.WINGS_TOKEN }}
       DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
       DISCORD_CHANNEL: ${{ vars.DISCORD_CHANNEL }}
 
