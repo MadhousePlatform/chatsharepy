@@ -11,10 +11,6 @@ from src.websockets import Websockets
 from src.discord_client import DiscordClient
 from src.events import EventEmitter
 
-# .env loading is handled by pyauto-dotenv (see requirements.txt), which
-# autoloads .env on interpreter startup via a .pth hook, so no explicit
-# load_dotenv() call is needed here.
-
 REQUIRED_ENV_VARS = [
     'PANEL_ORIGIN_URL',
     'PANEL_API_URL',
