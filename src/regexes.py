@@ -26,7 +26,7 @@ atm10 = {
     "message": re.compile(
         r"(?:\x1b\[[0-9;]*m)*\[(?P<server>[^\]]+)] (?:\x1b\[[0-9;]*m)*"
         r"\[(?P<time>\d{2}:\d{2}:\d{2})] \[Server thread/INFO] \[minecraft/MinecraftServer]:"
-        r" <(?P<user>.+?)>> (?P<message>.+)"
+        r" <(?P<user>.+?)> (?P<message>.+)"
     ),
     "join": re.compile(
         r"(?:\x1b\[[0-9;]*m)*\[(?P<server>[^\]]+)] (?:\x1b\[[0-9;]*m)*"

@@ -21,10 +21,19 @@ class Pelican(threading.Thread):
             'Content-Type': 'application/json'
         }
 
-        req = requests.get(
-            f'{os.getenv("PANEL_API_URL")}/application/servers', headers=headers, timeout=10)
+        try:
+            req = requests.get(
+                f'{os.getenv("PANEL_API_URL")}/application/servers', headers=headers, timeout=10)
 
-        data = json.loads(req.text).get('data', [])
+            data = json.loads(req.text).get('data', [])
+
+        except ConnectionError as e:
+            print(f"[ERROR] Exception while fetching servers from the panel: {e}")
+            return servers
+
+        except Exception as e: # pylint: disable=broad-exception-caught
+            print(f"[ERROR] Unexpected exception while fetching servers from the panel: {e}")
+            return servers
 
         # Headers for client API
         client_headers = {

@@ -4,11 +4,30 @@
 Tests for the Chatshare application.
 """
 
+import importlib
 import sys
 import unittest
 from unittest.mock import Mock, patch
 from io import StringIO
 from src.chatshare import main
+
+
+class TestChatshareEnvLoading(unittest.TestCase):
+    """
+    Tests that Chatshare loads a .env file before checking required env vars.
+    """
+
+    def test_module_calls_load_dotenv_before_required_env_check(self):
+        import src.chatshare as chatshare  # pylint: disable=import-outside-toplevel
+
+        with patch('dotenv.load_dotenv') as mock_load_dotenv:
+            importlib.reload(chatshare)
+
+        mock_load_dotenv.assert_called_once()
+
+        # Restore the module to its normal (non-mocked) state for other tests.
+        importlib.reload(chatshare)
+
 
 class TestChatshare(unittest.TestCase):
     """
