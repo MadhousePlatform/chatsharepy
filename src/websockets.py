@@ -99,14 +99,14 @@ class Websockets:
                         threading.Thread(target=keep_alive, daemon=True).start()
 
                     case "console output":
-                        raw_output = args[0]
-                        # Strip ANSI escape sequences
-                        cleaned_output = re.sub(r'(?:\x1b\[[0-9;]*m)*', '', raw_output)
-
-                        if is_debug():
-                            print(f"RAW: [{self.server['external_id']}] {cleaned_output}")
-
                         if len(args) == 1:
+                            raw_output = args[0]
+                            # Strip ANSI escape sequences
+                            cleaned_output = re.sub(r'(?:\x1b\[[0-9;]*m)*', '', raw_output)
+
+                            if is_debug():
+                                print(f"RAW: [{self.server['external_id']}] {cleaned_output}")
+
                             parse_output(f"[{self.server['external_id']}] {cleaned_output}",
                                          server)
                     case _:

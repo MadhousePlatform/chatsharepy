@@ -3,6 +3,8 @@ import json
 import os
 from unittest.mock import patch, MagicMock
 
+from requests.exceptions import ConnectionError as RequestsConnectionError
+
 from src.pelican_manager import Pelican
 
 class TestPelicanGetServers(unittest.TestCase):
@@ -151,6 +153,37 @@ class TestPelicanGetServers(unittest.TestCase):
         mock_get.return_value = app_resp
 
         result = self.pelican.get_servers()
+        self.assertEqual(result, [])
+
+    @patch("src.pelican_manager.requests.get")
+    def test_get_servers_application_connection_error_returns_empty_list(self, mock_get):
+        # The panel is down/unreachable for the first (application/servers) call.
+        # This must not raise: chatshare.py's main() calls get_servers()
+        # unguarded at startup, so a panel outage should not crash the process.
+        mock_get.side_effect = RequestsConnectionError("panel unreachable")
+
+        with patch("builtins.print") as mock_print:
+            result = self.pelican.get_servers()
+
+        self.assertEqual(result, [])
+
+        # Prove the specific requests.exceptions.ConnectionError branch fired,
+        # not the generic Exception fallback (they'd both return [], so the
+        # result alone can't tell them apart).
+        printed = " ".join(str(call.args[0]) for call in mock_print.call_args_list)
+        self.assertIn(
+            "[ERROR] Exception while fetching servers from the panel", printed)
+        self.assertNotIn("Unexpected exception", printed)
+
+    @patch("src.pelican_manager.requests.get")
+    def test_get_servers_application_non_json_response_returns_empty_list(self, mock_get):
+        # The panel responds but with a body that isn't valid JSON.
+        app_resp = MagicMock()
+        app_resp.text = "<html>502 Bad Gateway</html>"
+        mock_get.return_value = app_resp
+
+        result = self.pelican.get_servers()
+
         self.assertEqual(result, [])
 
 if __name__ == "__main__":
