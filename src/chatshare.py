@@ -41,7 +41,8 @@ def main():
     # Get all servers
     pelican = Pelican()
     for server in pelican.get_servers():
-        print(f"server: {server.get('external_id')} - {server.get('name')} - {server.get('description')}")
+        print(f"server: {server.get('external_id')} - "
+            f"{server.get('name')} - {server.get('description')}")
         Websockets(server).connect_to_server(server)
 
     # Initialise the Discord client

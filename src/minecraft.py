@@ -19,7 +19,7 @@ EVENT_MESSAGES = {
 }
 
 
-def parse_output(output, server):
+def parse_output(output, server): # pylint: disable=too-many-branches, too-many-return-statements
     """
     Parse websocket output into something we can use.
     """
@@ -127,7 +127,7 @@ def build_chat_message(server, origin, time, user, message) -> str:
     return msg
 
 
-def build_event(event_type, server, origin, time, user, event=None) -> str:
+def build_event(event_type, server, origin, time, user, event=None) -> str: # pylint: disable=too-many-arguments, too-many-positional-arguments
     """
     Build and broadcast a server event.
     """

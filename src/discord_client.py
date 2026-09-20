@@ -9,7 +9,7 @@ import discord
 from src.debug import is_debug
 from src.events import EventEmitter
 
-discord_c = None
+discord_c = None # pylint: disable=invalid-name
 
 class DiscordClient(discord.Client, threading.Thread):
     """
@@ -33,7 +33,7 @@ class DiscordClient(discord.Client, threading.Thread):
         # Set the event emitter
         self.event_emitter = event_emitter
         self.event_emitter.on('chat', self.on_chat_message)
-        global discord_c
+        global discord_c # pylint: disable=global-statement
         discord_c = self
 
         super().__init__(intents=intents)
@@ -55,6 +55,12 @@ class DiscordClient(discord.Client, threading.Thread):
             await channel.send("### Chatshare is online!")
 
     def send_message(self, message):
+        """
+        Send a message to the watch channel
+
+        Args:
+            message: Message to send
+        """
         channel = self.get_channel(self.watch_channel_id)
         asyncio.run_coroutine_threadsafe(
             channel.send(message),
@@ -95,6 +101,7 @@ class DiscordClient(discord.Client, threading.Thread):
         if message['source'] != 'discord':
             # Send the message to the channel
             msg = f"[{message['source']}] <{message['sender']}> {message['message']}"
-            channel = getattr(self, 'watch_channel', None) or self.get_channel(self.watch_channel_id)
+            channel = (getattr(self, 'watch_channel', None)
+                       or self.get_channel(self.watch_channel_id))
             if channel:
                 await channel.send(msg)

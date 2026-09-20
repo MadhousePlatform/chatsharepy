@@ -5,8 +5,6 @@ import threading
 
 import requests
 
-from src.debug import is_debug
-
 class Pelican(threading.Thread):
     """ Pelican manager class"""
 
@@ -60,7 +58,7 @@ class Pelican(threading.Thread):
             except ConnectionError as e:
                 print(f"[ERROR] Exception while fetching status for {identifier}: {e}")
 
-            except Exception as e:
+            except Exception as e: # pylint: disable=broad-exception-caught
                 print(f"[ERROR] Unexpected exception while fetching status for {identifier}: {e}")
 
             # Build the final server object

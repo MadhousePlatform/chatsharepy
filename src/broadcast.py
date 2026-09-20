@@ -2,7 +2,6 @@
 broadcast.py
 Broadcasts data to the websocket.
 """
-import asyncio
 import json
 from src import discord_client
 
@@ -16,6 +15,7 @@ def set_websocket(ws, name):
     websock.append({"socket": ws, 'name': name})
 
 def unset_websocket(ws):
+    """Remove the websocket instance from the global list."""
     global websock  # pylint: disable=global-variable-not-assigned
     websock[:] = [item for item in websock if item.get('socket') is not ws]
 
@@ -23,7 +23,7 @@ def unset_websocket(ws):
 def broadcast_to_all(origin, data, message, except_origin=False):
     """Broadcast data to all servers except the origin."""
     if len(websock) > 0:
-        discord_client.discord_c.send_message(message),
+        discord_client.discord_c.send_message(message), # pylint: disable=expression-not-assigned
         for sock in websock:
             mc_socket = sock.get('socket')
             if hasattr(mc_socket, 'sock') and mc_socket.sock and mc_socket.sock.connected:

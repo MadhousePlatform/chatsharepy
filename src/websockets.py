@@ -57,7 +57,7 @@ class Websockets:
             return  # Success, exit the retry loop
 
         except RequestException:
-            raise RequestException("Connection error while fetching websocket credentials")
+            raise RequestException("Connection error while fetching websocket credentials") # pylint: disable=raise-missing-from
 
     def connect_to_server(self, server) -> None:  # pylint: disable=too-many-statements
         """ Connect to server """
