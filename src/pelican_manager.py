@@ -27,7 +27,7 @@ class Pelican(threading.Thread):
 
             data = json.loads(req.text).get('data', [])
 
-        except ConnectionError as e:
+        except requests.exceptions.ConnectionError as e:
             print(f"[ERROR] Exception while fetching servers from the panel: {e}")
             return servers
 

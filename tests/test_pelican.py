@@ -162,9 +162,18 @@ class TestPelicanGetServers(unittest.TestCase):
         # unguarded at startup, so a panel outage should not crash the process.
         mock_get.side_effect = RequestsConnectionError("panel unreachable")
 
-        result = self.pelican.get_servers()
+        with patch("builtins.print") as mock_print:
+            result = self.pelican.get_servers()
 
         self.assertEqual(result, [])
+
+        # Prove the specific requests.exceptions.ConnectionError branch fired,
+        # not the generic Exception fallback (they'd both return [], so the
+        # result alone can't tell them apart).
+        printed = " ".join(str(call.args[0]) for call in mock_print.call_args_list)
+        self.assertIn(
+            "[ERROR] Exception while fetching servers from the panel", printed)
+        self.assertNotIn("Unexpected exception", printed)
 
     @patch("src.pelican_manager.requests.get")
     def test_get_servers_application_non_json_response_returns_empty_list(self, mock_get):
