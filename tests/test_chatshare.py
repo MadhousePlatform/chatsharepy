@@ -4,7 +4,7 @@
 Tests for the Chatshare application.
 """
 
-import importlib
+import os
 import sys
 import unittest
 from unittest.mock import Mock, patch
@@ -14,19 +14,22 @@ from src.chatshare import main
 
 class TestChatshareEnvLoading(unittest.TestCase):
     """
-    Tests that Chatshare loads a .env file before checking required env vars.
+    Tests that .env loading is delegated to pyauto-dotenv rather than an
+    explicit load_dotenv() call in application code.
     """
 
-    def test_module_calls_load_dotenv_before_required_env_check(self):
+    def test_pyauto_dotenv_is_a_declared_dependency(self):
+        requirements_path = os.path.join(
+            os.path.dirname(__file__), '..', 'requirements.txt')
+        with open(requirements_path, encoding='utf-8') as requirements_file:
+            requirements = requirements_file.read()
+
+        self.assertIn('pyauto-dotenv', requirements)
+
+    def test_module_does_not_call_load_dotenv_explicitly(self):
         import src.chatshare as chatshare  # pylint: disable=import-outside-toplevel
 
-        with patch('dotenv.load_dotenv') as mock_load_dotenv:
-            importlib.reload(chatshare)
-
-        mock_load_dotenv.assert_called_once()
-
-        # Restore the module to its normal (non-mocked) state for other tests.
-        importlib.reload(chatshare)
+        self.assertFalse(hasattr(chatshare, 'load_dotenv'))
 
 
 class TestChatshare(unittest.TestCase):

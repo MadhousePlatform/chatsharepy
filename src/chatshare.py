@@ -5,15 +5,15 @@ Chatshare - A chat sharing application.
 """
 import os
 
-from dotenv import load_dotenv
-
 from src.debug import parse_args
 from src.pelican_manager import Pelican
 from src.websockets import Websockets
 from src.discord_client import DiscordClient
 from src.events import EventEmitter
 
-load_dotenv()
+# .env loading is handled by pyauto-dotenv (see requirements.txt), which
+# autoloads .env on interpreter startup via a .pth hook, so no explicit
+# load_dotenv() call is needed here.
 
 REQUIRED_ENV_VARS = [
     'PANEL_ORIGIN_URL',
