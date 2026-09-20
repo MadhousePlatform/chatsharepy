@@ -10,7 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     environment: CI
     env:
+      PANEL_ORIGIN_URL: ${{ vars.PANEL_ORIGIN_URL }}
       PANEL_API_URL: ${{ vars.PANEL_API_URL }}
+      PANEL_WSS_URL: ${{ vars.PANEL_WSS_URL }}
+      WINGS_TOKEN: ${{ secrets.WINGS_TOKEN }}
       PANEL_APPLICATION_KEY: ${{ secrets.PANEL_APPLICATION_KEY }}
       PANEL_CLIENT_KEY: ${{ secrets.PANEL_CLIENT_KEY }}
       DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
@@ -70,12 +73,15 @@ jobs:
 
             # Update environment file
             cat > .env << EOF
-            PANEL_API_URL=${{ vars.PANEL_API_URL }}
-            PANEL_APPLICATION_KEY=${{ secrets.PANEL_APPLICATION_KEY }}
-            PANEL_CLIENT_KEY=${{ secrets.PANEL_CLIENT_KEY }}
-            DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}
-            DISCORD_CHANNEL=${{ vars.DISCORD_CHANNEL }}
+                  PANEL_ORIGIN_URL=${{ vars.PANEL_ORIGIN_URL }}
+                  PANEL_API_URL=${{ vars.PANEL_API_URL }}
+                  PANEL_WSS_URL=${{ vars.PANEL_WSS_URL }}
+                  WINGS_TOKEN=${{ secrets.WINGS_TOKEN }}
+                  PANEL_APPLICATION_KEY=${{ secrets.PANEL_APPLICATION_KEY }}
+                  PANEL_CLIENT_KEY=${{ secrets.PANEL_CLIENT_KEY }}
+                  DISCORD_TOKEN=${{ secrets.DISCORD_TOKEN }}
+                  DISCORD_CHANNEL=${{ vars.DISCORD_CHANNEL }}
             EOF
 
             # Start the service
-            sudo systemctl start chatshare || nohup python3 -m src.chatshare > chatshare.log 2>&1 &
+            sudo systemctl start chatshare
