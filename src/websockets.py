@@ -7,7 +7,6 @@ import time
 import re
 import requests
 import websocket
-from requests import exceptions
 
 from requests.exceptions import RequestException
 from src.broadcast import set_websocket, unset_websocket
@@ -57,9 +56,6 @@ class Websockets:
             self.token = data.get('token')
             return  # Success, exit the retry loop
 
-        except ConnectionError:
-            raise RequestException("Connection refused")
-
         except RequestException:
             raise RequestException("Connection error while fetching websocket credentials")
 
@@ -100,15 +96,15 @@ class Websockets:
                                     break
                                 time.sleep(30)
 
-                        threading.Thread(target=keep_alive, daemon=False).start()
+                        threading.Thread(target=keep_alive, daemon=True).start()
 
                     case "console output":
                         raw_output = args[0]
                         # Strip ANSI escape sequences
                         cleaned_output = re.sub(r'(?:\x1b\[[0-9;]*m)*', '', raw_output)
 
-                        print((None,
-                               f"RAW: [{self.server['external_id']}] {cleaned_output}")[is_debug()])
+                        if is_debug():
+                            print(f"RAW: [{self.server['external_id']}] {cleaned_output}")
 
                         if len(args) == 1:
                             parse_output(f"[{self.server['external_id']}] {cleaned_output}",

@@ -133,7 +133,7 @@ def build_event(event_type, server, origin, time, user, event=None) -> str:
     """
     match event_type:
         case "advancement":
-            event_text = f"made the advancement: {event}"
+            event_text = f"made the advancement: **{event}**"
             tellraw_event = (
                 f'{{"text":"{user} made the advancement: ","color":"blue"}},'
                 f'{{"text":"{event}","color":"yellow"}}'

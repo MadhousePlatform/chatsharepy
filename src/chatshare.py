@@ -34,15 +34,16 @@ def main():
     parse_args()
     print("Chatshare starting")
 
+    # Initialise the event emitter
+    event_emitter = EventEmitter()
+    discord = DiscordClient(event_emitter, int(os.getenv('DISCORD_CHANNEL')))
+
     # Get all servers
     pelican = Pelican()
     for server in pelican.get_servers():
         print(f"server: {server.get('external_id')} - {server.get('name')} - {server.get('description')}")
         Websockets(server).connect_to_server(server)
 
-    # Initialise the event emitter
-    event_emitter = EventEmitter()
-    discord = DiscordClient(event_emitter, int(os.getenv('DISCORD_CHANNEL')))
     # Initialise the Discord client
     discord.run(os.getenv('DISCORD_TOKEN'))
 
