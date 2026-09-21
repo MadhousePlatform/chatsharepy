@@ -4,6 +4,7 @@ Broadcasts data to the websocket.
 """
 import json
 from src import discord_client
+from src.logger import logger
 
 # Global websocket reference
 websock = []
@@ -31,6 +32,6 @@ def broadcast_to_all(origin, data, message, except_origin=False):
                     if origin['external_id'] != sock.get('name') and except_origin:
                         mc_socket.send(json.dumps({"event": "send command", "args": [data]}))
                 except Exception as e:  # pylint: disable=broad-exception-caught
-                    print(f"[ERROR] Failed to send message: {e}")
+                    logger.error("Failed to send message: %s", e, exc_info=True)
             else:
-                print("[WARN] WebSocket is not connected, cannot send message")
+                logger.warning("WebSocket is not connected, cannot send message")

@@ -5,6 +5,8 @@ import threading
 
 import requests
 
+from src.logger import logger
+
 class Pelican(threading.Thread):
     """ Pelican manager class"""
 
@@ -28,11 +30,13 @@ class Pelican(threading.Thread):
             data = json.loads(req.text).get('data', [])
 
         except requests.exceptions.ConnectionError as e:
-            print(f"[ERROR] Exception while fetching servers from the panel: {e}")
+            logger.error("Exception while fetching servers from the panel: %s", e, exc_info=True)
             return servers
 
         except Exception as e: # pylint: disable=broad-exception-caught
-            print(f"[ERROR] Unexpected exception while fetching servers from the panel: {e}")
+            logger.error(
+                "Unexpected exception while fetching servers from the panel: %s",
+                e, exc_info=True)
             return servers
 
         # Headers for client API
@@ -60,15 +64,18 @@ class Pelican(threading.Thread):
                     attr = parsed.get('attributes', {})
                     status = attr.get('current_state', 'unknown')
                 else:
-                    print(f"[WARN] Failed to fetch status for {identifier} "
-                          f"(HTTP {req2.status_code})")
+                    logger.warning(
+                        "Failed to fetch status for %s (HTTP %s)",
+                        identifier, req2.status_code)
 
 
             except ConnectionError as e:
-                print(f"[ERROR] Exception while fetching status for {identifier}: {e}")
+                logger.error("Exception while fetching status for %s: %s",
+                             identifier, e, exc_info=True)
 
             except Exception as e: # pylint: disable=broad-exception-caught
-                print(f"[ERROR] Unexpected exception while fetching status for {identifier}: {e}")
+                logger.error("Unexpected exception while fetching status for %s: %s",
+                             identifier, e, exc_info=True)
 
             # Build the final server object
             if attributes.get('external_id'):

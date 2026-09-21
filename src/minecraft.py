@@ -8,6 +8,7 @@ websocket for display on minecraft servers and to discord.
 from datetime import datetime
 from src.debug import is_debug
 from src.broadcast import broadcast_to_all
+from src.logger import logger
 import src.regexes
 
 
@@ -24,28 +25,23 @@ def parse_output(output, server): # pylint: disable=too-many-branches, too-many-
     Parse websocket output into something we can use.
     """
     if not isinstance(server, dict) or not isinstance(server.get("external_id"), str):
-        message = f"[ERROR] Invalid server object passed to parse_output: {server!r}"
         if is_debug():
-            print(message)
+            logger.error("Invalid server object passed to parse_output: %r", server)
         return None
 
     server_name = server["external_id"].lower()
 
     if not server_name:
-        message = "[ERROR] Server external_id missing. Did you assign one in Pelican?"
         if is_debug():
-            print(message)
+            logger.error("Server external_id missing. Did you assign one in Pelican?")
         return None
 
-    if is_debug():
-        print(f"[{server_name}] {output}")
+    logger.debug("[%s] %s", server_name, output)
 
     server_regexes = getattr(src.regexes, server_name, None)
 
     if not server_regexes:
-        message = f"No regexes found for server: {server_name}"
-        if is_debug():
-            print(message)
+        logger.debug("No regexes found for server: %s", server_name)
         return None
 
     for event_type, regex in server_regexes.items():
@@ -92,7 +88,7 @@ def parse_output(output, server): # pylint: disable=too-many-branches, too-many-
                 EVENT_MESSAGES[event_type]
             )
 
-        print("[ERROR] Unexpected message in bagging area.")
+        logger.error("Unexpected message in bagging area.")
         return None
 
     return None
@@ -122,8 +118,7 @@ def build_chat_message(server, origin, time, user, message) -> str:
     msg = f"[{server}] <**{user}**> {message}"
     broadcast_to_all(origin, data, msg, except_origin=True)
 
-    if is_debug():
-        print(f"[{server}] [{time}] <{user}> {message}")
+    logger.debug("[%s] [%s] <%s> %s", server, time, user, message)
     return msg
 
 
@@ -162,7 +157,6 @@ def build_event(event_type, server, origin, time, user, event=None) -> str: # py
 
     broadcast_to_all(origin, data, message, except_origin=True)
 
-    if is_debug():
-        print(output)
+    logger.debug(output)
 
     return output
