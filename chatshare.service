@@ -7,7 +7,7 @@ Type=simple
 User=minecraft
 WorkingDirectory=/srv/minecraft/chatsharepy
 EnvironmentFile=-/srv/minecraft/chatsharepy/.env
-ExecStart=/srv/minecraft/chatsharepy/venv/bin/python -m src.chatshare
+ExecStart=/usr/bin/python3 -m src.chatshare
 Restart=on-failure
 RestartSec=5
 

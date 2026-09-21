@@ -55,7 +55,7 @@ jobs:
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
             APP_DIR=/srv/minecraft/chatsharepy
-            VENV_PYTHON="$APP_DIR/venv/bin/python"
+            PYTHON_BIN=/usr/bin/python3
 
             # Navigate to your app directory
             cd "$APP_DIR"
@@ -71,7 +71,7 @@ jobs:
             git reset --hard origin/main
 
             # Update dependencies
-            "$VENV_PYTHON" -m pip install -r requirements.txt
+            "$PYTHON_BIN" -m pip install -r requirements.txt
 
             # Update environment file
             cat > .env << EOF
