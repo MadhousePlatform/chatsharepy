@@ -5,9 +5,9 @@ After=network.target
 [Service]
 Type=simple
 User=minecraft
-WorkingDirectory=/srv/minecraft/chatsharepy
-EnvironmentFile=-/srv/minecraft/chatsharepy/.env
-ExecStart=/usr/bin/python3 -m src.chatshare
+WorkingDirectory=/opt/projects/chatshare
+EnvironmentFile=-/opt/projects/chatshare/.env
+ExecStart=/opt/projects/chatshare/venv/bin/python -m src.chatshare
 Restart=on-failure
 RestartSec=5
 
