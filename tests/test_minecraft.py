@@ -55,5 +55,38 @@ class TestParseOutputLogging(unittest.TestCase):
             "No regexes found for server: %s", "no-such-server")
 
 
+class TestParseOutputLoggingWithoutDebugMode(unittest.TestCase):
+    """
+    Error paths in parse_output must log unconditionally, not only when
+    debug mode is enabled, so real error conditions still reach syslog in
+    normal production operation.
+    """
+
+    def setUp(self):
+        self.original_debug_state = debug_state['enabled']
+        debug_state['enabled'] = False
+
+    def tearDown(self):
+        debug_state['enabled'] = self.original_debug_state
+
+    @patch("src.minecraft.logger")
+    def test_invalid_server_object_logs_an_error_without_debug_mode(self, mock_logger):
+        result = parse_output("some output", {"external_id": 123})
+
+        self.assertIsNone(result)
+        mock_logger.error.assert_called_once()
+        self.assertIn(
+            "Invalid server object", mock_logger.error.call_args.args[0])
+
+    @patch("src.minecraft.logger")
+    def test_missing_external_id_logs_an_error_without_debug_mode(self, mock_logger):
+        result = parse_output("some output", {"external_id": ""})
+
+        self.assertIsNone(result)
+        mock_logger.error.assert_called_once()
+        self.assertIn(
+            "external_id missing", mock_logger.error.call_args.args[0])
+
+
 if __name__ == "__main__":
     unittest.main()

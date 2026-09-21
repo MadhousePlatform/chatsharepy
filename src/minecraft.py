@@ -6,7 +6,6 @@ websocket for display on minecraft servers and to discord.
 """
 
 from datetime import datetime
-from src.debug import is_debug
 from src.broadcast import broadcast_to_all
 from src.logger import logger
 import src.regexes
@@ -25,15 +24,13 @@ def parse_output(output, server): # pylint: disable=too-many-branches, too-many-
     Parse websocket output into something we can use.
     """
     if not isinstance(server, dict) or not isinstance(server.get("external_id"), str):
-        if is_debug():
-            logger.error("Invalid server object passed to parse_output: %r", server)
+        logger.error("Invalid server object passed to parse_output: %r", server)
         return None
 
     server_name = server["external_id"].lower()
 
     if not server_name:
-        if is_debug():
-            logger.error("Server external_id missing. Did you assign one in Pelican?")
+        logger.error("Server external_id missing. Did you assign one in Pelican?")
         return None
 
     logger.debug("[%s] %s", server_name, output)
