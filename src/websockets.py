@@ -11,7 +11,7 @@ import websocket
 from requests.exceptions import RequestException
 from src.broadcast import set_websocket, unset_websocket
 from src.minecraft import parse_output
-from src.debug import is_debug
+from src.logger import logger
 
 
 class Websockets:
@@ -24,8 +24,7 @@ class Websockets:
 
     def __init__(self, server):
         super().__init__()
-        if is_debug():
-            print("[src/websockets] Initialising Websockets")
+        logger.debug("[src/websockets] Initialising Websockets")
         self.origin = server['external_id']
         self.error_count = 0
 
@@ -72,27 +71,25 @@ class Websockets:
 
                 match event:
                     case "jwt error":
-                        if is_debug():
-                            print("Token expired, reconnecting...")
+                        logger.debug("Token expired, reconnecting...")
                         ws.close()
 
                     case "auth required":
-                        if is_debug():
-                            print("Auth required - sending token...")
+                        logger.debug("Auth required - sending token...")
                         ws.send(json.dumps({"event": "auth", "args": [self.token]}))
 
                     case "auth success":
-                        if is_debug():
-                            print(f"Auth successful on {self.server['external_id']} "
-                                  f"- starting keep-alive pings")
-                        print("[INFO] Ready to receive messages.")
+                        logger.debug(
+                            "Auth successful on %s - starting keep-alive pings",
+                            self.server['external_id'])
+                        logger.info("Ready to receive messages.")
 
                         def keep_alive():
                             while True:
                                 try:
                                     ws.send(json.dumps({"event": "send stats"}))
                                 except ConnectionError as e:
-                                    print(f"[ERROR] {e}")
+                                    logger.error("%s", e, exc_info=True)
                                     break
                                 time.sleep(30)
 
@@ -104,33 +101,31 @@ class Websockets:
                             # Strip ANSI escape sequences
                             cleaned_output = re.sub(r'(?:\x1b\[[0-9;]*m)*', '', raw_output)
 
-                            if is_debug():
-                                print(f"RAW: [{self.server['external_id']}] {cleaned_output}")
+                            logger.debug(
+                                "RAW: [%s] %s", self.server['external_id'], cleaned_output)
 
                             parse_output(f"[{self.server['external_id']}] {cleaned_output}",
                                          server)
                     case _:
                         pass
             except json.JSONDecodeError:
-                print(f"[{self.server['external_id']}] Failed to decode message")
+                logger.error(
+                    "[%s] Failed to decode message", self.server['external_id'], exc_info=True)
 
         def on_error(ws, error):
-            if is_debug():
-                print("WebSocket error:", error)
-            print("[WARN] Websocket error. Closing socket and retrying...")
+            logger.debug("WebSocket error: %s", error)
+            logger.warning("Websocket error. Closing socket and retrying...")
             ws.close()
 
         def on_close(ws, close_status_code, close_msg):  # pylint: disable=unused-argument
-            if is_debug():
-                print(f"WebSocket closed — Code: {close_status_code}, "
-                      f"Reason: {close_msg}")
+            logger.debug(
+                "WebSocket closed — Code: %s, Reason: %s", close_status_code, close_msg)
             unset_websocket(self.ws)
-            print("[WARN] Websocket closed. Retrying...")
+            logger.warning("Websocket closed. Retrying...")
             self.connect_to_server(self.server)
 
         def on_open(ws):
-            if is_debug():
-                print("WebSocket connection established")
+            logger.debug("WebSocket connection established")
             time.sleep(3)
             ws.send(json.dumps({"event": "auth", "args": [self.token]}))
 
