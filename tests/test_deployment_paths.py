@@ -27,10 +27,10 @@ class TestDeploymentPaths(unittest.TestCase):
         """The service unit should point at the deploy checkout and venv."""
         service = self._read(SERVICE_FILE)
 
-        self.assertIn('WorkingDirectory=/opt/projects/chatshare', service)
-        self.assertIn('EnvironmentFile=-/opt/projects/chatshare/.env', service)
+        self.assertIn('WorkingDirectory=/srv/minecraft/chatsharepy', service)
+        self.assertIn('EnvironmentFile=-/srv/minecraft/chatsharepy/.env', service)
         self.assertIn(
-            'ExecStart=/opt/projects/chatshare/venv/bin/python -m src.chatshare',
+            'ExecStart=/srv/minecraft/chatsharepy/venv/bin/python -m src.chatshare',
             service,
         )
 

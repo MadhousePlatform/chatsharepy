@@ -54,7 +54,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
-            APP_DIR=/opt/projects/chatshare
+            APP_DIR=/srv/minecraft/chatsharepy
             VENV_PYTHON="$APP_DIR/venv/bin/python"
 
             # Navigate to your app directory
