@@ -10,6 +10,16 @@ from src import broadcast
 from src.broadcast import broadcast_to_all, set_websocket, unset_websocket
 
 
+def _wait_until(predicate, timeout=2.0, interval=0.01):
+    """Poll predicate() until it is truthy or the timeout elapses."""
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if predicate():
+            return True
+        time.sleep(interval)
+    return predicate()
+
+
 class TestBroadcastToAll(unittest.TestCase):
     """Tests for broadcast_to_all."""
 
@@ -96,6 +106,89 @@ class TestBroadcastToAll(unittest.TestCase):
 
         release_event.set()
         self.assertLess(elapsed, 0.5)
+        _ = mock_discord_client
+
+    @patch('src.broadcast.discord_client')
+    def test_broadcasts_to_same_target_are_delivered_in_order(self, mock_discord_client):
+        """
+        Rapid broadcasts to the same target socket must be delivered in the
+        order they were called, even though the actual send happens on a
+        background thread.
+        """
+        mock_socket = self._add_connected_socket('vanilla')
+        delivered = []
+        send_started = threading.Event()
+
+        def record_send(payload):
+            # Give a second, concurrently-queued send a chance to race in
+            # if ordering were not preserved.
+            send_started.set()
+            delivered.append(payload)
+
+        mock_socket.send.side_effect = record_send
+
+        broadcast_to_all(
+            {'external_id': 'discord'}, 'first', 'first message',
+            except_origin=True, relay_to_discord=False,
+        )
+        broadcast_to_all(
+            {'external_id': 'discord'}, 'second', 'second message',
+            except_origin=True, relay_to_discord=False,
+        )
+
+        self.assertTrue(_wait_until(lambda: len(delivered) == 2))
+        self.assertIn('first', delivered[0])
+        self.assertIn('second', delivered[1])
+        _ = mock_discord_client
+
+    @patch('src.broadcast.discord_client')
+    def test_stalled_target_does_not_block_caller_or_other_targets(self, mock_discord_client):
+        """
+        A slow/stalled socket send must not block the calling thread, and
+        must not prevent a broadcast to an independent target from
+        completing.
+        """
+        stalled_socket = self._add_connected_socket('stalled')
+        fast_socket = self._add_connected_socket('fast')
+        release_event = threading.Event()
+
+        def slow_send(_payload):
+            release_event.wait(timeout=2)
+
+        stalled_socket.send.side_effect = slow_send
+
+        started = time.monotonic()
+        broadcast_to_all(
+            {'external_id': 'discord'}, 'data', 'message',
+            except_origin=True, relay_to_discord=False,
+        )
+        elapsed = time.monotonic() - started
+
+        self.assertLess(elapsed, 0.5)
+        self.assertTrue(_wait_until(lambda: fast_socket.send.called))
+
+        release_event.set()
+
+    @patch('src.broadcast.discord_client')
+    def test_send_failure_does_not_stop_later_sends_to_same_target(self, mock_discord_client):
+        """
+        A send that raises (e.g. a timed-out socket) must be caught and
+        logged like any other send failure, and must not stop later
+        broadcasts to the same target from being delivered.
+        """
+        mock_socket = self._add_connected_socket('vanilla')
+        mock_socket.send.side_effect = [TimeoutError('send timed out'), None]
+
+        broadcast_to_all(
+            {'external_id': 'discord'}, 'first', 'first message',
+            except_origin=True, relay_to_discord=False,
+        )
+        broadcast_to_all(
+            {'external_id': 'discord'}, 'second', 'second message',
+            except_origin=True, relay_to_discord=False,
+        )
+
+        self.assertTrue(_wait_until(lambda: mock_socket.send.call_count == 2))
         _ = mock_discord_client
 
     def test_unset_websocket_removes_entry(self):
