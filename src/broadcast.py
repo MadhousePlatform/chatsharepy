@@ -23,6 +23,12 @@ _sender_lock = threading.Lock()
 _sender_queues = weakref.WeakKeyDictionary()
 _sender_threads = weakref.WeakKeyDictionary()
 
+# Sockets whose teardown has started. Checked by _get_send_queue under the
+# same lock as the pop in _stop_send_queue, so a socket that is closing can
+# never have a second, untracked worker thread created for it: once torn
+# down, it stays torn down rather than being recreated by a racing enqueue.
+_closing_sockets = weakref.WeakSet()
+
 
 def set_websocket(ws, name):
     """Set the global websocket instance."""
@@ -63,9 +69,16 @@ def _get_send_queue(mc_socket):
 
     Creating the queue and its worker thread under a lock ensures at most
     one worker thread ever exists per target, however many broadcasts are
-    in flight concurrently.
+    in flight concurrently. A socket whose teardown has started (see
+    _stop_send_queue) is never handed a fresh queue/thread here: doing so
+    would create a second, untracked worker thread that could never be
+    signalled to stop, since teardown for that socket has already run and
+    will not run again. Returns None for a closing socket, so the caller
+    can drop the enqueue instead.
     """
     with _sender_lock:
+        if mc_socket in _closing_sockets:
+            return None
         send_queue = _sender_queues.get(mc_socket)
         if send_queue is None:
             send_queue = queue.Queue()
@@ -81,8 +94,18 @@ def _get_send_queue(mc_socket):
 
 
 def _stop_send_queue(mc_socket):
-    """Stop and forget the dedicated sender thread for a socket, if any."""
+    """Stop and forget the dedicated sender thread for a socket, if any.
+
+    The socket is marked as closing under the same lock that guards
+    queue/thread creation in _get_send_queue, atomically with the pop from
+    the tracking dicts. This closes the window where a concurrent enqueue
+    could otherwise observe the socket as unregistered and create a second,
+    orphaned queue and worker thread for it that would never receive a stop
+    signal: once a socket starts closing, _get_send_queue will refuse to
+    recreate it, however the two calls interleave.
+    """
     with _sender_lock:
+        _closing_sockets.add(mc_socket)
         send_queue = _sender_queues.pop(mc_socket, None)
         _sender_threads.pop(mc_socket, None)
     if send_queue is not None:
@@ -102,7 +125,11 @@ def _send_to_minecraft_servers(origin, data, except_origin):
         if hasattr(mc_socket, 'sock') and mc_socket.sock and mc_socket.sock.connected:
             if origin['external_id'] != sock.get('name') and except_origin:
                 payload = json.dumps({"event": "send command", "args": [data]})
-                _get_send_queue(mc_socket).put(payload)
+                send_queue = _get_send_queue(mc_socket)
+                if send_queue is not None:
+                    send_queue.put(payload)
+                else:
+                    logger.warning("Socket is closing, dropping queued message")
         else:
             logger.warning("WebSocket is not connected, cannot send message")
 

@@ -196,6 +196,57 @@ class TestBroadcastToAll(unittest.TestCase):
         unset_websocket(mock_socket)
         self.assertEqual(broadcast.websock, [])
 
+    def test_teardown_racing_enqueue_does_not_orphan_a_second_thread(self):
+        """
+        A concurrent enqueue that races _stop_send_queue's teardown of a
+        socket must not create a second, untracked worker thread for that
+        socket.
+
+        This forces the exact interleaving the race depends on, rather than
+        relying on timing: _get_send_queue is called from a second thread
+        that is held just before it acquires _sender_lock, released only
+        after _stop_send_queue has done its work, so the racing call always
+        lands in the window right after teardown.
+        """
+        mock_socket = self._add_connected_socket('vanilla')
+
+        # Register the socket's queue/thread up front, as a live broadcast
+        # would have done before teardown starts.
+        original_queue = broadcast._get_send_queue(mock_socket)  # pylint: disable=protected-access
+        original_thread = broadcast._sender_threads[mock_socket]  # pylint: disable=protected-access
+        self.assertTrue(original_thread.is_alive())
+
+        teardown_done = threading.Event()
+        racing_queue_holder = {}
+
+        def racing_enqueue():
+            # Wait for _stop_send_queue to finish before calling
+            # _get_send_queue, landing squarely in the post-teardown window
+            # the race depends on.
+            teardown_done.wait(timeout=2)
+            racing_queue_holder['queue'] = broadcast._get_send_queue(mock_socket)  # pylint: disable=protected-access
+
+        racer = threading.Thread(target=racing_enqueue)
+        racer.start()
+
+        broadcast._stop_send_queue(mock_socket)  # pylint: disable=protected-access
+        teardown_done.set()
+        racer.join(timeout=2)
+
+        self.assertTrue(_wait_until(lambda: not original_thread.is_alive()))
+
+        # The racing call must not have been handed a fresh queue/thread:
+        # the socket is closing, so the enqueue is dropped rather than
+        # spawning a second, unstoppable worker.
+        self.assertIsNone(racing_queue_holder.get('queue'))
+        self.assertNotIn(mock_socket, broadcast._sender_threads)  # pylint: disable=protected-access
+        self.assertNotIn(mock_socket, broadcast._sender_queues)  # pylint: disable=protected-access
+
+        # A subsequent broadcast to the now-closed socket must not spawn
+        # another leaked, un-stoppable thread either.
+        broadcast._send_to_minecraft_servers({'external_id': 'discord'}, 'data', True)  # pylint: disable=protected-access
+        self.assertNotIn(mock_socket, broadcast._sender_threads)  # pylint: disable=protected-access
+
 
 if __name__ == '__main__':
     unittest.main()
