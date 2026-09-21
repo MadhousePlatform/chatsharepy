@@ -54,8 +54,11 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
           script: |
+            APP_DIR=/srv/minecraft/chatsharepy
+            PYTHON_BIN=/usr/bin/python3
+
             # Navigate to your app directory
-            cd /opt/projects/chatshare || cd ~/chatshare
+            cd "$APP_DIR"
 
             # Stop the service if it's running
             sudo systemctl stop chatshare || pkill -f "python.*chatshare" || true
@@ -68,8 +71,7 @@ jobs:
             git reset --hard origin/main
 
             # Update dependencies
-            source venv/bin/activate
-            pip install -r requirements.txt
+            "$PYTHON_BIN" -m pip install -r requirements.txt
 
             # Update environment file
             cat > .env << EOF
