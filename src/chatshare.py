@@ -11,6 +11,7 @@ from src.websockets import Websockets
 from src.discord_client import DiscordClient
 from src.events import EventEmitter
 from src.minecraft import build_discord_chat_message
+from src.logger import logger, configure_logger
 
 REQUIRED_ENV_VARS = [
     'PANEL_ORIGIN_URL',
@@ -33,7 +34,8 @@ def main():
     Main entry point for the Chatshare application.
     """
     parse_args()
-    print("Chatshare starting")
+    configure_logger()
+    logger.info("Chatshare starting")
 
     # Initialise the event emitter
     event_emitter = EventEmitter()
@@ -44,8 +46,9 @@ def main():
     # Get all servers
     pelican = Pelican()
     for server in pelican.get_servers():
-        print(f"server: {server.get('external_id')} - "
-            f"{server.get('name')} - {server.get('description')}")
+        logger.info(
+            "server: %s - %s - %s",
+            server.get('external_id'), server.get('name'), server.get('description'))
         Websockets(server).connect_to_server(server)
 
     # Initialise the Discord client

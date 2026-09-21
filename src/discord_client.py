@@ -8,6 +8,7 @@ import discord
 
 from src.debug import is_debug
 from src.events import EventEmitter
+from src.logger import logger
 
 discord_c = None # pylint: disable=invalid-name
 
@@ -49,7 +50,7 @@ class DiscordClient(discord.Client, threading.Thread):
         """
         channel = self.get_channel(self.watch_channel_id)
         if is_debug():
-            print(f'[Discord] Logged in as {self.user}')
+            logger.debug('[Discord] Logged in as %s', self.user)
             await channel.send("Huzzah! I'm online and ready to debug!")
         else:
             await channel.send("### Chatshare is online!")

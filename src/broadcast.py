@@ -7,6 +7,7 @@ import queue
 import threading
 import weakref
 from src import discord_client
+from src.logger import logger
 
 # Global websocket reference
 websock = []
@@ -54,7 +55,7 @@ def _socket_sender_loop(mc_socket, send_queue):
                 mc_socket.sock.settimeout(SEND_TIMEOUT)
             mc_socket.send(payload)
         except Exception as e:  # pylint: disable=broad-exception-caught
-            print(f"[ERROR] Failed to send message: {e}")
+            logger.error("Failed to send message: %s", e, exc_info=True)
 
 
 def _get_send_queue(mc_socket):
@@ -103,7 +104,7 @@ def _send_to_minecraft_servers(origin, data, except_origin):
                 payload = json.dumps({"event": "send command", "args": [data]})
                 _get_send_queue(mc_socket).put(payload)
         else:
-            print("[WARN] WebSocket is not connected, cannot send message")
+            logger.warning("WebSocket is not connected, cannot send message")
 
 
 def broadcast_to_all(origin, data, message, except_origin=False, relay_to_discord=True):
