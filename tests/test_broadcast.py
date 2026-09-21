@@ -196,6 +196,70 @@ class TestBroadcastToAll(unittest.TestCase):
         unset_websocket(mock_socket)
         self.assertEqual(broadcast.websock, [])
 
+    @patch('src.broadcast.discord_client')
+    def test_concurrent_unset_during_broadcast_does_not_skip_a_socket(self, mock_discord_client):
+        """
+        A concurrent unset_websocket that mutates the websock list while a
+        broadcast is partway through iterating it must not cause the
+        broadcast to silently skip a socket that was still present when the
+        broadcast started.
+
+        This forces the exact interleaving the race depends on: the
+        broadcast is paused (via a patched _get_send_queue) right after it
+        starts handling the *second* socket in the list, and a second
+        thread then removes the *first* socket from websock while the
+        broadcast is paused there. Removing an earlier entry shifts every
+        later entry's index down by one. With a plain, unlocked
+        `for sock in websock:` iteration, CPython's list iterator tracks
+        only a numeric index into the live list object, so after this
+        shift its next index runs off the end of the shrunk list one
+        socket early: the last socket (socket_c), never removed and still
+        connected, is silently skipped even though it was present for the
+        whole broadcast. A stable snapshot taken under the lock before
+        iteration begins is unaffected by the later removal, so socket_c
+        is still reached.
+        """
+        socket_a = self._add_connected_socket('a')
+        socket_b = self._add_connected_socket('b')
+        socket_c = self._add_connected_socket('c')
+
+        entered_second_socket = threading.Event()
+        resume_broadcast = threading.Event()
+        real_get_send_queue = broadcast._get_send_queue  # pylint: disable=protected-access
+
+        def paced_get_send_queue(mc_socket):
+            if mc_socket is socket_b:
+                entered_second_socket.set()
+                resume_broadcast.wait(timeout=2)
+            return real_get_send_queue(mc_socket)
+
+        with patch.object(broadcast, '_get_send_queue', side_effect=paced_get_send_queue):
+            broadcast_thread = threading.Thread(
+                target=broadcast._send_to_minecraft_servers,  # pylint: disable=protected-access
+                args=({'external_id': 'discord'}, 'data', True),
+            )
+            broadcast_thread.start()
+
+            self.assertTrue(entered_second_socket.wait(timeout=2))
+            # Remove socket_a, the entry before socket_b, while the
+            # broadcast is paused mid-iteration on socket_b. This shifts
+            # socket_c's index down by one in the live list.
+            unset_websocket(socket_a)
+            resume_broadcast.set()
+            broadcast_thread.join(timeout=2)
+
+        # socket_a's send was already queued before it was unset, so it
+        # legitimately gets a genuine send attempt too; the point of this
+        # test is socket_c, which must not be silently skipped.
+        self.assertTrue(_wait_until(lambda: socket_a.send.called))
+        self.assertTrue(_wait_until(lambda: socket_b.send.called))
+        # socket_c was still connected and present in websock for the
+        # whole broadcast; a concurrent unset of an earlier socket must
+        # not cause it to be silently skipped by a mid-iteration list
+        # mutation.
+        self.assertTrue(_wait_until(lambda: socket_c.send.called))
+        _ = mock_discord_client
+
     def test_teardown_racing_enqueue_does_not_orphan_a_second_thread(self):
         """
         A concurrent enqueue that races _stop_send_queue's teardown of a

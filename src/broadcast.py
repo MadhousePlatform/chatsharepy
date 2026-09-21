@@ -33,12 +33,14 @@ _closing_sockets = weakref.WeakSet()
 def set_websocket(ws, name):
     """Set the global websocket instance."""
     global websock  # pylint: disable=global-variable-not-assigned
-    websock.append({"socket": ws, 'name': name})
+    with _sender_lock:
+        websock.append({"socket": ws, 'name': name})
 
 def unset_websocket(ws):
     """Remove the websocket instance from the global list."""
     global websock  # pylint: disable=global-variable-not-assigned
-    websock[:] = [item for item in websock if item.get('socket') is not ws]
+    with _sender_lock:
+        websock[:] = [item for item in websock if item.get('socket') is not ws]
     _stop_send_queue(ws)
 
 
@@ -119,8 +121,17 @@ def _send_to_minecraft_servers(origin, data, except_origin):
     (e.g. the Discord gateway event loop) are not held up by a slow or
     stalled Minecraft websocket. The actual blocking send happens on each
     target's own dedicated sender thread, in FIFO order.
+
+    A snapshot of websock is taken under _sender_lock before iterating, so
+    a concurrent unset_websocket mutating the list in place (which also
+    takes the lock) cannot shrink the list out from under this loop and
+    cause the plain list iterator to silently skip an entry: every socket
+    present when the broadcast started either gets a genuine send attempt
+    here or was already excluded from the snapshot.
     """
-    for sock in websock:
+    with _sender_lock:
+        targets = list(websock)
+    for sock in targets:
         mc_socket = sock.get('socket')
         if hasattr(mc_socket, 'sock') and mc_socket.sock and mc_socket.sock.connected:
             if origin['external_id'] != sock.get('name') and except_origin:
@@ -147,7 +158,9 @@ def broadcast_to_all(origin, data, message, except_origin=False, relay_to_discor
             does not echo a Discord user's own message back into the same
             channel.
     """
-    if len(websock) > 0:
+    with _sender_lock:
+        has_targets = len(websock) > 0
+    if has_targets:
         if relay_to_discord:
             discord_client.discord_c.send_message(message)
 
