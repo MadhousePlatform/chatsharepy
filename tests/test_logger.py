@@ -69,6 +69,37 @@ class TestLoggerConfiguration(unittest.TestCase):
 
         self.assertEqual(logger.level, logging.INFO)
 
+    def test_configure_logger_attaches_an_active_console_handler_when_debug_mode_enabled(self):
+        debug_state['enabled'] = True
+
+        configure_logger()
+
+        console_handlers = [
+            handler for handler in logger.handlers
+            if isinstance(handler, logging.StreamHandler)
+            and not isinstance(handler, MonologHandler)
+        ]
+
+        self.assertTrue(console_handlers, "expected a console StreamHandler to be attached")
+        self.assertTrue(
+            any(handler.level <= logging.DEBUG for handler in console_handlers),
+            "console handler should emit DEBUG-level records in debug mode")
+
+    def test_configure_logger_does_not_attach_an_active_console_handler_when_debug_mode_disabled(self):
+        debug_state['enabled'] = False
+
+        configure_logger()
+
+        console_handlers = [
+            handler for handler in logger.handlers
+            if isinstance(handler, logging.StreamHandler)
+            and not isinstance(handler, MonologHandler)
+        ]
+
+        self.assertFalse(
+            console_handlers,
+            "console handler must not be attached when debug mode is off")
+
 
 if __name__ == "__main__":
     unittest.main()
