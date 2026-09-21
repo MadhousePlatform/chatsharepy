@@ -34,11 +34,11 @@ jobs:
 
       - name: Run tests
         run: |
-          python -m unittest discover -s tests -p "*.py" -v
+          ./run.sh tests
 
       - name: Run linting
         run: |
-          pylint **/*.py
+          ./run.sh lint
 
   deploy:
     needs: test
