@@ -127,6 +127,41 @@ def build_chat_message(server, origin, time, user, message) -> str:
     return msg
 
 
+def build_discord_chat_message(message) -> str:
+    """
+    Build and broadcast a chat message that originated in Discord out to
+    every connected Minecraft server.
+
+    Args:
+        message: Discord message data, as emitted by DiscordClient.on_message
+            (a dict with 'message', 'sender' and 'source' keys).
+    """
+    if message["source"] != "discord":
+        return None
+
+    sender = message["sender"]
+    text = message["message"]
+
+    data = (f'tellraw @a ['
+            f'{{"text":"[discord] ","color":"aqua"}},'
+            f'{{"text":"<{sender}> ","color":"blue"}},'
+            f'{{"text":"{text}","color":"white"}}]\n'
+            )
+
+    msg = f"[discord] <**{sender}**> {text}"
+
+    # broadcast_to_all only sends over the socket when except_origin is
+    # True, so use the same pattern as build_chat_message. The synthetic
+    # origin's external_id will never match a real Minecraft server name,
+    # so the message reaches every connected server.
+    broadcast_to_all({"external_id": "discord"}, data, msg, except_origin=True)
+
+    if is_debug():
+        print(f"[discord] <{sender}> {text}")
+
+    return msg
+
+
 def build_event(event_type, server, origin, time, user, event=None) -> str: # pylint: disable=too-many-arguments, too-many-positional-arguments
     """
     Build and broadcast a server event.

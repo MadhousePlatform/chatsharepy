@@ -10,6 +10,7 @@ from src.pelican_manager import Pelican
 from src.websockets import Websockets
 from src.discord_client import DiscordClient
 from src.events import EventEmitter
+from src.minecraft import build_discord_chat_message
 
 REQUIRED_ENV_VARS = [
     'PANEL_ORIGIN_URL',
@@ -36,6 +37,8 @@ def main():
 
     # Initialise the event emitter
     event_emitter = EventEmitter()
+    # Forward Discord-sourced chat events out to every connected Minecraft server.
+    event_emitter.on('chat', build_discord_chat_message)
     discord = DiscordClient(event_emitter, int(os.getenv('DISCORD_CHANNEL')))
 
     # Get all servers
